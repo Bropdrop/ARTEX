@@ -793,6 +793,8 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("DELETE /api/task-templates/{id}", s.pgDeleteTaskTemplate)
 	mux.HandleFunc("GET /api/tasks/{id}", s.getTask)
 	mux.HandleFunc("GET /api/tasks/{id}/authority", s.taskAuthority)
+	mux.HandleFunc("GET /api/tasks/{id}/authority/casefile", s.taskAuthorityCasefile)
+	mux.HandleFunc("POST /api/tasks/{id}/authority/records/{record}/source", s.taskAuthoritySource)
 	mux.HandleFunc("GET /api/tasks/{id}/outcome", s.taskOutcome)
 	mux.HandleFunc("GET /api/tasks/{id}/lessons", s.taskLessons)
 	mux.HandleFunc("POST /api/tasks/{id}/lessons/extract", s.extractTaskLessons)

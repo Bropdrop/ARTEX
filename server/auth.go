@@ -342,16 +342,19 @@ func (s *Server) requireAuth(h http.Handler) http.Handler {
 		}
 		tok := extractToken(r)
 		if tok == "" {
+			w.Header().Set("Cache-Control", "no-store")
 			writeErr(w, 401, "Unauthorized")
 			return
 		}
 		if !s.sessionOK(tok) {
+			w.Header().Set("Cache-Control", "no-store")
 			writeErr(w, 401, "token is invalid or expired")
 			return
 		}
 		switch r.Method {
 		case http.MethodPost, http.MethodPut, http.MethodPatch, http.MethodDelete:
 			if cookieAuthenticated(r) && !sameOrigin(r) {
+				w.Header().Set("Cache-Control", "no-store")
 				writeErr(w, 403, "cross-origin request refused: a cookie session can change state only from the console's own origin; send the token as Authorization: Bearer instead")
 				return
 			}

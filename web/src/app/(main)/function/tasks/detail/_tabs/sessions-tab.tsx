@@ -50,7 +50,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useSideQuestions } from "@/hooks/use-side-questions";
-import { api, sseUrl } from "@/lib/api";
+import { api, type ResolvedAuthorityFocus, sseUrl } from "@/lib/api";
 import { shouldSubmitOnKey, useChatSendMode } from "@/lib/chat-send-mode";
 import { MOCK } from "@/lib/mock/enabled";
 import { isBtwCommand } from "@/lib/side-questions";
@@ -489,8 +489,16 @@ function WorkerAssetBadge({ assets }: { assets: IntentAsset[] }) {
   );
 }
 
-export function SessionsTab({ taskId, taskPaused = false }: { taskId: string; taskPaused?: boolean }) {
-  const approvalFocus = useApprovalFocus({ taskId });
+export function SessionsTab({
+  taskId,
+  taskPaused = false,
+  initialFocus,
+}: {
+  taskId: string;
+  taskPaused?: boolean;
+  initialFocus?: ResolvedAuthorityFocus;
+}) {
+  const approvalFocus = useApprovalFocus({ taskId, initialFocus });
   const [selectedSessionId, setActiveId] = React.useState(MAIN_ID);
   const focusSession = React.useMemo<Session | undefined>(() => {
     const source = approvalFocus.state?.source;

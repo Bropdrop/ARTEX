@@ -20,7 +20,8 @@
     "test:traffic-stream": "node --test scripts/traffic-stream.test.mjs",
     "test:i18n": "node scripts/check-i18n.mjs && node --test scripts/i18n.test.mjs",
     "test:bash": "node --test src/lib/bash-exit-status.test.mjs",
-    "test:authority": "node --test scripts/authority.test.mjs"
+    "test:casefile": "node --test scripts/casefile.test.mjs",
+    "test:authority": "node --test scripts/authority.test.mjs scripts/casefile.test.mjs"
   },
   "lint-staged": {
     "*.{js,ts,jsx,tsx}": [

@@ -102,7 +102,7 @@ export default function LoginPage() {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <picture className="contents">
             <source srcSet="/logo.webp" type="image/webp" />
-            <img src="/logo.png" alt="ARTEX" width={160} height={160} className="relative brightness-0 invert" />
+            <img src="/logo.png" alt="" width={160} height={160} className="relative brightness-0 invert" />
           </picture>
         </div>
       </div>
@@ -113,7 +113,7 @@ export default function LoginPage() {
           <div className="space-y-4 text-center">
             <h2 className="text-2xl font-medium tracking-tight">{t("Sign in")}</h2>
             <p className="mx-auto max-w-xl text-muted-foreground">
-              {t("Welcome back — enter your password to continue using ARTEX")}
+              {t("Welcome back — enter your password to continue using Wolftrax")}
             </p>
           </div>
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">

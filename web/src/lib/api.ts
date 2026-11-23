@@ -142,8 +142,7 @@ export class ApiError extends Error {
   }
 }
 
-export async function http<T>(path: string, init?: RequestInit): Promise<T> {
-  if (MOCK) return mockHandle<T>(init?.method ?? "GET", path, init?.body ?? null);
+async function authenticatedResponse(path: string, init?: RequestInit): Promise<Response> {
   const token = getToken();
   const r = await fetch(`/api${path}`, {
     ...init,
@@ -174,6 +173,12 @@ export async function http<T>(path: string, init?: RequestInit): Promise<T> {
     }
     throw new ApiError(message, r.status);
   }
+  return r;
+}
+
+export async function http<T>(path: string, init?: RequestInit): Promise<T> {
+  if (MOCK) return mockHandle<T>(init?.method ?? "GET", path, init?.body ?? null);
+  const r = await authenticatedResponse(path, init);
   if (r.status === 204) return undefined as T;
   return r.json();
 }
@@ -270,6 +275,11 @@ function interceptPageQuery(page: number, size: number, filter: InterceptApprova
   if (filter.decision_source) query.set("decision_source", filter.decision_source);
   if (filter.decided_by) query.set("decided_by", filter.decided_by);
   return query.toString();
+}
+
+export interface ResolvedAuthorityFocus {
+  id: string;
+  source: import("@/lib/types").InterceptExecution;
 }
 
 export const api = {
@@ -1455,9 +1465,27 @@ export const api = {
       total: r.total ?? r.items?.length ?? 0,
     })),
 
-  authorityPage: (taskId: string, page = 1, size = 20) =>
-    get<AuthorityPage>(
+  authorityPage: (taskId: string, page = 1, size = 20, signal?: AbortSignal) =>
+    http<AuthorityPage>(
       `/tasks/${encodeURIComponent(taskId)}/authority?${new URLSearchParams({ page: String(page), size: String(size) })}`,
+      { signal, cache: "no-store" },
+    ),
+  authorityCasefile: (taskId: string, signal: AbortSignal) =>
+    authenticatedResponse(`/tasks/${encodeURIComponent(taskId)}/authority/casefile`, { signal, cache: "no-store" }),
+  authorityRecordedSource: (
+    taskId: string,
+    recordId: string,
+    identity: {
+      source_namespace: string;
+      dataset_incarnation: string;
+      run_id: string;
+      tool_use_id: string;
+      tool_name: string;
+    },
+  ) =>
+    post<{ task_id: string; session: string; seq: number }>(
+      `/tasks/${encodeURIComponent(taskId)}/authority/records/${encodeURIComponent(recordId)}/source`,
+      identity,
     ),
 
   // ---- intercept tool-config (global tool interception scope) ----

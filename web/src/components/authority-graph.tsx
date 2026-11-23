@@ -16,11 +16,10 @@ import "@xyflow/react/dist/style.css";
 import { CircleHelpIcon, FileCheck2Icon, FingerprintIcon, GitBranchIcon, TerminalIcon } from "lucide-react";
 
 import { t } from "@/i18n";
-import { type AuthorityGraphNode, actorState, authorityGraph, sourceState } from "@/lib/authority";
-import type { AuthorityRecord } from "@/lib/types";
+import { type AuthorityGraphNode, actorState, authorityGraph, type GraphRecord, sourceState } from "@/lib/authority";
 import { cn } from "@/lib/utils";
 
-type GraphNode = Node<AuthorityGraphNode & { record: AuthorityRecord } & Record<string, unknown>, "authority">;
+type GraphNode = Node<AuthorityGraphNode & { record: GraphRecord } & Record<string, unknown>, "authority">;
 
 const colors = {
   neutral: "border-slate-300/70 dark:border-slate-600",
@@ -98,7 +97,7 @@ const positions = {
   effect: { x: 568, y: 414 },
 };
 
-export function AuthorityGraph({ record }: { record: AuthorityRecord }) {
+export function AuthorityGraph({ record }: { record: GraphRecord }) {
   const { nodes, edges } = React.useMemo(() => {
     const graph = authorityGraph(record);
     return {

@@ -57,6 +57,8 @@ services:
       ARTEX_JWT_KEY_DIR: /app/keys
       # Optional: key for secrets at rest; empty = keys/secret.key (generated at first start).
       ARTEX_SECRET_KEY: ${ARTEX_SECRET_KEY:-}
+      WOLFTRAX_SOURCE_NAMESPACE: ${WOLFTRAX_SOURCE_NAMESPACE:-}
+      WOLFTRAX_DATASET_INCARNATION: ${WOLFTRAX_DATASET_INCARNATION:-}
       ARTEX_TRUSTED_PROXIES: ${ARTEX_TRUSTED_PROXIES:-}
       # Untrusted-output boundary: on by default (empty = on); ARTEX_UNTRUSTED_BOUNDARY=0 in .env
       # disables it. Cost: about 154 bytes per tool result plus one system note.

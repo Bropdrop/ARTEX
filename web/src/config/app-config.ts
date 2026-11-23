@@ -5,11 +5,11 @@ import { t } from "@/i18n";
 const currentYear = new Date().getFullYear();
 
 export const APP_CONFIG = {
-  name: "ARTEX",
+  name: "Wolftrax",
   version: packageJson.version,
   copyright: `© ${currentYear}, ARTEX.`,
   meta: {
-    title: t("ARTEX — Autonomous Penetration Testing Console"),
+    title: t("Wolftrax — Investigation Lab"),
     description: t("Console for the LLM-driven autonomous penetration testing system"),
   },
 };

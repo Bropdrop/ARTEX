@@ -1,0 +1,604 @@
+{
+  "schema": "wolftrax.investigation-qualification.v1",
+  "recorded_at": "2026-11-23T19:22:33.004692+00:00",
+  "repository": "https://github.com/Bropdrop/ARTEX",
+  "branch": "feat/wolftrax-investigation-lab-v1",
+  "integration_base": {
+    "branch": "feat/wolftrap-authority-graph-v1",
+    "commit": "c07c6615316db214ce12e55f22f73628b5bfc6a3",
+    "tree": "e5e49e48cf41153e299aa6b0f255679bfd31dcb9",
+    "remote_head_at_start": "c07c6615316db214ce12e55f22f73628b5bfc6a3",
+    "local_modifications_at_start": []
+  },
+  "tested_commit": "6dc83f44d5a0729043617906bc869486b19972c9",
+  "tested_tree": "4646f5a8cdf271b8dc8084ce701d9c0e388f800e",
+  "rendered_check_commit": "99c27cdd6aa162df29fdc300a921d29f258237a0",
+  "rendered_check_tree": "f848734c054b6c745b98b1df630e6d681398937c",
+  "difference_from_tested_commit": "README and Investigation Lab guide only. Final PG-backed browser bridge rerun at tested_commit.",
+  "verdict": "Draft for review. 32 full gates passed. E05 passed artifact and offline rendering checks with one blocked browser-policy subcheck.",
+  "tools": {
+    "go": "1.26.11",
+    "postgresql": "17.12 (Debian 17.12-0+deb13u1)",
+    "python": "3.12.14",
+    "node": "24.22.3",
+    "npm": "11.19.1",
+    "chromium": "156.0.8078.79",
+    "playwright": "1.62.0",
+    "next": "16.4.6",
+    "biome": "2.5.1"
+  },
+  "machine": {
+    "os": "Debian GNU/Linux 13",
+    "kernel": "6.18.57 x86_64",
+    "cpu": "Intel Xeon Platinum 8573C",
+    "visible_cpus": 5,
+    "cpu_quota_cores": 4,
+    "cgroup_memory_limit_bytes": 17179869184
+  },
+  "handoff_zip_sha256": "6f3ea973c60310318b234253d4692481d4956bf1f71360f6ac21af2a1d8129a1",
+  "baseline": {
+    "testing": "Separate clean worktree at pinned head. Disposable socket-only cluster. ARTEX_PG_DSN explicitly set. Package-suffixed databases contained synthetic data.",
+    "go": [
+      {
+        "command": "go test -p=3 ./db ./server -run Authority -count=1 -json",
+        "status": "passed",
+        "counts": {
+          "top_level_tests": {
+            "pass": 6,
+            "fail": 0,
+            "skip": 0
+          },
+          "subtests": {
+            "pass": 12,
+            "fail": 0,
+            "skip": 0
+          }
+        },
+        "source_commit": "c07c6615316db214ce12e55f22f73628b5bfc6a3"
+      },
+      {
+        "command": "go test -p=3 ./db ./server ./intercept -run '^(TestInterceptExecutionNavigation|TestInterceptDetailHTTP|TestTrace.*)$' -count=1 -json",
+        "status": "passed",
+        "counts": {
+          "top_level_tests": {
+            "pass": 7,
+            "fail": 0,
+            "skip": 0
+          },
+          "subtests": {
+            "pass": 2,
+            "fail": 0,
+            "skip": 0
+          }
+        },
+        "source_commit": "c07c6615316db214ce12e55f22f73628b5bfc6a3"
+      }
+    ],
+    "web": {
+      "web/package-lock.json": "8b3f2cf7b4a7024085d9b266a167eab957127f4867ed6e30eff4ff62dd614f08",
+      "npm ci --ignore-scripts": {
+        "status": "passed",
+        "packages": 690
+      },
+      "npm run test:authority": {
+        "pass": 25,
+        "fail": 0,
+        "skip": 0
+      },
+      "npm run test:polling": {
+        "pass": 3,
+        "fail": 0,
+        "skip": 0
+      },
+      "npm run test:i18n": {
+        "pass": 5,
+        "fail": 0,
+        "skip": 0,
+        "literal_keys": 2697,
+        "tr_keys": 2800,
+        "zh-CN_keys": 2800
+      },
+      "./node_modules/.bin/tsc --noEmit --incremental false": "passed",
+      "./node_modules/.bin/biome check src/lib/authority.ts src/components/authority-graph.tsx 'src/app/(main)/function/tasks/detail/_tabs/authority-tab.tsx' scripts/authority.test.mjs": "passed",
+      "NEXT_TELEMETRY_DISABLED=1 npm run build:static": "passed"
+    },
+    "referee": {
+      "command": "python3 -m unittest discover -s scripts -p 'test_wolftrap_evidence.py' -v",
+      "pass": 42,
+      "fail": 0,
+      "skip": 0
+    },
+    "rendered": {
+      "command": "python3 web/scripts/investigation-browser.py --live-only --static /tmp/wolftrax-baseline/web/out",
+      "scenarios": {
+        "pass": 2,
+        "fail": 0,
+        "skip": 0
+      },
+      "results": [
+        {
+          "width": 1440,
+          "chromium": "156.0.8078.79",
+          "live": "pass",
+          "authority_reads": 10
+        },
+        {
+          "width": 390,
+          "chromium": "156.0.8078.79",
+          "live": "pass",
+          "authority_reads": 10
+        }
+      ]
+    }
+  },
+  "final_checks": [
+    {
+      "command": "go test -p=2 ./db ./server ./intercept -run 'Authority|^Test(Casefile|InterceptExecutionNavigation|InterceptDetailHTTP|Trace|InvestigationDemo|WolftraxFindingsExporterReferee)' -count=1 -json",
+      "status": "passed",
+      "counts": {
+        "top_level": {
+          "pass": 19,
+          "fail": 0,
+          "skip": 0
+        },
+        "subtests": {
+          "pass": 19,
+          "fail": 0,
+          "skip": 0
+        }
+      },
+      "top_level_tests": [
+        "TestCasefileConcurrentWriters",
+        "TestAuthorityAuditMetadata",
+        "TestAuthorityPaginationBounds",
+        "TestTaskAuthorityProjection",
+        "TestInterceptExecutionNavigation",
+        "TestTraceExactCorrelationAndSnapshot",
+        "TestTraceIdenticalParallelCallsAreNeverGuessed",
+        "TestTraceSequentialIdenticalCallsAndRunIsolation",
+        "TestTraceBoundsAndMissingResult",
+        "TestTraceConcurrentDistinctCalls",
+        "TestCasefileHTTP",
+        "TestCasefileHTTPLimits",
+        "TestCasefileHTTPSource",
+        "TestAuthorityParams",
+        "TestAuthorityHTTPValidation",
+        "TestAuthorityHTTPProjection",
+        "TestInterceptDetailHTTP",
+        "TestInvestigationDemo",
+        "TestWolftraxFindingsExporterReferee"
+      ],
+      "exporter_referee": [
+        {
+          "sha256": "2c6c8d8f71e45cc147afb7769d7a46c1944ee1329f6df12a6f9d5085708109e3",
+          "status": "INCONCLUSIVE",
+          "bindings": "1",
+          "issue": "UNPINNED_ARCHIVE",
+          "origin": "UNAUTHENTICATED",
+          "claim": "CLAIM_NOT_ASSESSED"
+        },
+        {
+          "sha256": "2c6c8d8f71e45cc147afb7769d7a46c1944ee1329f6df12a6f9d5085708109e3",
+          "status": "VERIFIED",
+          "bindings": "1",
+          "issue": "",
+          "origin": "UNAUTHENTICATED",
+          "claim": "CLAIM_NOT_ASSESSED"
+        },
+        {
+          "sha256": "f16522129f04f29f405a32f15ba6bce564e9da2920d8431827f5842788a71ba8",
+          "status": "INVALID",
+          "bindings": "0",
+          "issue": "BODY_HASH_MISMATCH",
+          "origin": "UNAUTHENTICATED",
+          "claim": "CLAIM_NOT_ASSESSED"
+        }
+      ]
+    },
+    {
+      "command": "go test -tags wolftrax_browser ./server -run '^TestInvestigationBrowser$' -count=1 -json",
+      "status": "passed",
+      "counts": {
+        "top_level": {
+          "pass": 1,
+          "fail": 0,
+          "skip": 0
+        },
+        "subtests": {
+          "pass": 0,
+          "fail": 0,
+          "skip": 0
+        }
+      },
+      "setup": "Fresh disposable ARTEX_PG_DSN with package suffix, web/out, headless Chromium, production JWT auth + task Authority handler; ancillary task-shell endpoints supplied local fixture responses. Separate DB writer between captures.",
+      "observations": [
+        {
+          "phase": "before",
+          "records": 1,
+          "bytes": 993,
+          "sha256": "2601b194c9af6fe495e9d7924c0c6f5ba17c3afa448c0d38992c1b9e490ef9a7",
+          "offline_api_requests": 0,
+          "unexpected_requests": 0,
+          "chromium": "156.0.8078.79"
+        },
+        {
+          "phase": "after",
+          "records": 2,
+          "bytes": 1519,
+          "sha256": "d5d345a6c4ba52ead4ea8ef4e85c27ae2e9c9420945c3e6e84612d53d9cbfc16",
+          "report_sha256": "7f0058bcb7ec56cc48e54b24bfe0c816bde09ab3168f6abe76b334fbc4d5d15e",
+          "added": 1,
+          "changed": 1,
+          "offline_api_requests": 0,
+          "unexpected_requests": 0,
+          "chromium": "156.0.8078.79"
+        }
+      ]
+    },
+    {
+      "command": "go vet -p=2 ./db ./server ./intercept",
+      "status": "passed"
+    },
+    {
+      "command": "cd web && npm run test:authority",
+      "status": "passed",
+      "counts": {
+        "pass": 41,
+        "fail": 0,
+        "skip": 0
+      },
+      "units": "25 inherited Authority cases plus 16 casefile contract cases"
+    },
+    {
+      "command": "cd web && npm run test:polling",
+      "status": "passed",
+      "counts": {
+        "pass": 3,
+        "fail": 0,
+        "skip": 0
+      }
+    },
+    {
+      "command": "cd web && npm run test:i18n",
+      "status": "passed",
+      "counts": {
+        "pass": 5,
+        "fail": 0,
+        "skip": 0
+      },
+      "dictionary_parity": "2750 literal keys, 2902 entries per Turkish and Simplified Chinese dictionary"
+    },
+    {
+      "command": "python3 -m unittest discover -s scripts -p 'test_wolftrap_evidence.py' -v",
+      "status": "passed",
+      "methods": {
+        "pass": 42,
+        "fail": 0,
+        "skip": 0
+      }
+    },
+    {
+      "command": "cd web && ./node_modules/.bin/tsc --noEmit --incremental false",
+      "status": "passed"
+    },
+    {
+      "command": "cd web && ./node_modules/.bin/biome check src/lib/authority.ts src/lib/casefile.ts src/components/{authority-graph,authority-record-details,authority-record-browser,investigation-mode}.tsx 'src/app/(main)/function/tasks/detail/_tabs/authority-tab.tsx' 'src/app/(main)/function/investigation/page.tsx' scripts/{casefile,authority}.test.mjs",
+      "status": "passed",
+      "files": 10
+    },
+    {
+      "command": "cd web && NEXT_TELEMETRY_DISABLED=1 npm run build:static",
+      "status": "passed",
+      "static_pages": 32
+    },
+    {
+      "command": "cd web && python3 -u scripts/investigation-browser.py --static out --large /tmp/wolftrax-demo/large.json --screenshots /workspace/scratch/wolftrax-browser",
+      "status": "passed",
+      "scenarios": {
+        "pass": 4,
+        "fail": 0,
+        "skip": 0
+      },
+      "scopes": [
+        "Live and portable paths at 1440x900 and 390x900; fixture HTTP transport for races/negative responses. Production handler emitted the unmodified casefile bytes.",
+        "Downloaded report interpreted in fresh offline document. Direct file navigation separately blocked."
+      ],
+      "observations": [
+        {
+          "width": 1440,
+          "chromium": "156.0.8078.79",
+          "live": "pass",
+          "authority_reads": 10
+        },
+        {
+          "width": 1440,
+          "portable": "pass",
+          "unexpected_requests": 0
+        },
+        {
+          "width": 390,
+          "chromium": "156.0.8078.79",
+          "live": "pass",
+          "authority_reads": 10
+        },
+        {
+          "width": 390,
+          "portable": "pass",
+          "unexpected_requests": 0
+        }
+      ]
+    },
+    {
+      "command": "WOLFTRAX_DEMO_DIR=/tmp/wolftrax-demo go test ./server -run '^TestInvestigationDemo$' -count=1 -json",
+      "status": "passed",
+      "counts": {
+        "pass": 1,
+        "fail": 0,
+        "skip": 0
+      },
+      "fixture": "Synthetic reading-room v1; fixed field values/timestamps, fresh incarnation, DB-assigned IDs and capture times. mkdir destination first."
+    },
+    {
+      "command": "python3 docs/wolftrax-demo/import_examples.py /tmp/wolftrax-import-examples && node --experimental-transform-types docs/wolftrax-demo/check.mjs /tmp/wolftrax-demo /tmp/wolftrax-import-examples",
+      "status": "passed",
+      "examples": "5 producer exports, 3 inspectable derived variants and 6 hostile rejections. Difference oracle checks exact changed field and kind."
+    },
+    {
+      "command": "(cd docs/wolftrax-demo && sha256sum -c SHA256SUMS); git diff --check c07c661 HEAD; gofmt -l on all changed Go files",
+      "status": "passed"
+    }
+  ],
+  "interface_measurement": {
+    "fixture": "TestInvestigationDemo large.json v1",
+    "method": "One run per width on the same machine, monotonic wall clock from browser upload to visible count, then text search to selected graph. CDP Runtime.getHeapUsage after filtering. Includes automation waits. Heap samples are neither peaks nor per-record allocation. Viewport emulation uses desktop hardware.",
+    "results": [
+      {
+        "width": 1440,
+        "heap_used_bytes_after_filter": 31674252,
+        "records": 2000,
+        "bytes": 931468,
+        "sha256": "09299d379a45a3881ebb2ea22532346e14f29161056dfd5bf0c2c7acef41f1bc",
+        "open_ms": 203.2,
+        "filter_select_ms": 73.2
+      },
+      {
+        "width": 390,
+        "heap_used_bytes_after_filter": 27750076,
+        "records": 2000,
+        "bytes": 931468,
+        "sha256": "09299d379a45a3881ebb2ea22532346e14f29161056dfd5bf0c2c7acef41f1bc",
+        "open_ms": 244.8,
+        "filter_select_ms": 64.1
+      }
+    ],
+    "v1_limits": {
+      "records": 2000,
+      "json_bytes": 4194304,
+      "utf8_bytes_per_string": 4096,
+      "json_depth": 6
+    },
+    "scope": "Record cap exercised at the chosen upper boundary. Separate parser/producer tests exercise byte and field limits. No performance guarantee for a 4 MiB comparison or other machines."
+  },
+  "accepted_fixtures": {
+    "casefile_profile": "wolftrax.authority.v1",
+    "producer": "Wolftrax/1",
+    "referee_profile": "artex-md-zip-d235be850e9b34247ddb566686c47e6d4e4f0daf",
+    "referee_pin_assurance": "Same fixture supplied the archive digest. Pin establishes byte consistency only.",
+    "inspection_report_sha256_from_bundled_pair": "1921e0f2c7ea24299020a2bffaf6027694f116584abe22bc40f3a8a0fac69aca"
+  },
+  "acceptance": {
+    "B01": {
+      "status": "passed",
+      "evidence": "Clean clone from Bropdrop. Remote branch matched the pinned commit and tree. New branch stacked on PR 2."
+    },
+    "B02": {
+      "status": "passed",
+      "evidence": "Pinned Go, fresh disposable PostgreSQL, locked frontend tools, and Python baseline. Distinct counting units below."
+    },
+    "B03": {
+      "status": "passed",
+      "evidence": "Rendered Live in Chromium at both viewport widths, including keyboard/graph selection, pagination, empty-page recovery, stale refresh, retry and delayed task changes."
+    },
+    "B04": {
+      "status": "passed",
+      "evidence": "Browser followed the checked original execution into native Sessions and focused the exact activity. Synthetic HTTP responses supplied Sessions data. Separate Go tests exercised the real resolver and wrong/ambiguous scopes."
+    },
+    "B05": {
+      "status": "passed",
+      "evidence": "Authenticated production findings download with real PostgreSQL binding and evidence store. Offline referee checked binary/empty bodies and re-packed altered binary."
+    },
+    "C01": {
+      "status": "passed",
+      "evidence": "Authenticated production casefile GET executed by handler tests and two actual browser sessions."
+    },
+    "C02": {
+      "status": "passed",
+      "evidence": "Concurrent committed inserts, updates, removal and archival/deletion while production FreezeTaskAuthority waited on the record table. Earlier export retained only the earlier records."
+    },
+    "C03": {
+      "status": "passed",
+      "evidence": "HTTP/DB checks for canonical task scope, conversation/mixed-scope exclusion and snapshot-time visibility."
+    },
+    "C04": {
+      "status": "passed",
+      "evidence": "Selected SQL fields only. Excluded canaries checked in handler body, failure, logger, production fixture and generated HTML."
+    },
+    "C05": {
+      "status": "passed",
+      "evidence": "Empty selection, 2000/2001 records, 4096-byte multibyte field boundary, total-size overflow and absent success payload on 413."
+    },
+    "C06": {
+      "status": "passed",
+      "evidence": "Strict parser rejects duplicate and escape-equivalent keys, invalid UTF-8, excessive nesting, unknown fields, malformed dates, unsafe numeric representations and repeated IDs."
+    },
+    "C07": {
+      "status": "passed",
+      "evidence": "Unfamiliar states and raw values survive import and rendered inspection. Unsupported versions fail."
+    },
+    "C08": {
+      "status": "passed",
+      "evidence": "Go and browser checks bind the digest to exact body bytes, including one-byte changes, whitespace and byte-identical downloaded JSON."
+    },
+    "C09": {
+      "status": "passed",
+      "evidence": "Namespace, incarnation and task identity compatibility tests, restored fixture and copied-lineage caveat."
+    },
+    "C10": {
+      "status": "passed",
+      "evidence": "Capture time, selection and coverage in snapshot, UI and report. Concurrent archive/delete gate rechecked separately from existing bytes."
+    },
+    "U01": {
+      "status": "passed",
+      "evidence": "Native mode switching and standalone historical viewer. Delayed results ignored after task/mode change."
+    },
+    "U02": {
+      "status": "passed",
+      "evidence": "Browser request observer during local import, playback, comparison and report use. PG-backed browser path restricted to read-only Authority GETs and synthetic shell responses."
+    },
+    "U03": {
+      "status": "passed",
+      "evidence": "Held refresh did not overwrite Frozen. Visibility wake and virtual 25-second interval produced zero API reads. Standalone viewer avoided pending-approval reads on initial mount and locale reloads."
+    },
+    "U04": {
+      "status": "passed",
+      "evidence": "Combined tool/agent/actor/source/decision/gap/date filters, clear and empty results, selected graph and page-local vs complete-file counts."
+    },
+    "U05": {
+      "status": "passed",
+      "evidence": "Keyboard scrubber, playback and undated bucket. Nanosecond ties sorted deterministically. UI discloses capture-time detail semantics."
+    },
+    "U06": {
+      "status": "passed",
+      "evidence": "Refusal for differing or missing namespaces/incarnations and incompatible tasks, selection, coverage and schema. Assertion-based alignment disclosed."
+    },
+    "U07": {
+      "status": "passed",
+      "evidence": "One addition, one absence and one changed outcome in demonstration pack, with before/after values in browser and report."
+    },
+    "U08": {
+      "status": "passed",
+      "evidence": "Historical navigation rechecks current lineage, task visibility and unique call/activity in PostgreSQL; browser exercised rejection and success into Sessions. Standalone source button disabled."
+    },
+    "U09": {
+      "status": "passed",
+      "evidence": "Desktop and mobile Chromium keyboard checks, exact accessible filter names, visible selection, Turkish and Simplified Chinese upload and timeline controls, locale parity check."
+    },
+    "U10": {
+      "status": "passed",
+      "evidence": "Measured producer-generated 2000-record file in both viewports. Wall time and observed heap recorded below."
+    },
+    "E01": {
+      "status": "passed",
+      "evidence": "Separate coverage, grant, display identity, outcome, origin, digest and claim fields/labels. Referee independently retains its original dimensions."
+    },
+    "E02": {
+      "status": "passed",
+      "evidence": "Reordered inputs give deterministic rule IDs and supporting record IDs."
+    },
+    "E03": {
+      "status": "passed",
+      "evidence": "Missing audit, unrecognized state/decision source, unavailable/ambiguous linkage and missing owner grants/receipts remain explicit."
+    },
+    "E04": {
+      "status": "passed",
+      "evidence": "Contradictory saved decision/tool outcome matched the cited advisory in helper tests and rendered fixture."
+    },
+    "E05": {
+      "status": "passed_with_blocked_subcheck",
+      "evidence": "Actual downloaded report rendered in a fresh offline Chromium document, including inert hostile display text and no network requests. Direct file open blocked by managed browser policy."
+    },
+    "E06": {
+      "status": "passed",
+      "evidence": "All production fixture files checked against their exact digests, imported and compared. Maximum positive int64 string survives round trip."
+    },
+    "E07": {
+      "status": "passed",
+      "evidence": "Four small producer-marked synthetic casefiles shipped. Explicit synthetic installation marker in demo. Default production marker false."
+    },
+    "E08": {
+      "status": "passed",
+      "evidence": "This record identifies the tested source before the separate qualification-only commit, fixtures, commands, limits and historical file hashes."
+    }
+  },
+  "corrected_during_validation": [
+    "Initial extra aggregate run used an incorrectly reconstructed socket DSN: 9 top-level tests and 12 subtests passed, 10 top-level tests failed connection setup, zero skips. Corrected the DSN and reran in fresh disposable databases. No production permission or test changes.",
+    "An intermediate contract test expected a dated event for a fixture missing its decision timestamp. Corrected the fixture expectation and verified the undated behavior.",
+    "An intermediate static build caught a missing size-limit import. It was corrected and both browser Freeze paths passed on the corrected build.",
+    "Rendered checks identified ambiguous names on select controls. Explicit accessible names and keyboard checks now pass. Shell and pending-approvals polling also suspend during historical review, including first entry to the standalone reader."
+  ],
+  "blocked": [
+    {
+      "check": "Launch downloaded HTML via file:// in managed Chromium",
+      "reason": "Managed browser administrator policy prevented local-file navigation. The exact downloaded report rendered in a new offline browser document. Direct local-file launch remains unverified."
+    }
+  ],
+  "skipped_tests_in_final_suites": 0,
+  "failed_tests_in_final_suites": 0,
+  "not_executed": [
+    "Full upstream regression/race suites and non-Chromium browser matrix.",
+    "Live target assessments, provider calls, deployment, release, merge and production-scale qualification."
+  ],
+  "assurance": "Unsigned development qualification on synthetic data. Operator session, selected database metadata, self-asserted lineage and exact-byte consistency. No authenticated origin, independent owner grant, effect receipt or assessed vulnerability claim.",
+  "source_and_fixture_sha256": {
+    ".env.example": "f66a909b2405a2886306ade33923833d21590437390477d2591bb8f6febaa7f7",
+    "LICENSE": "0d96a4ff68ad6d4b6f1f30f713b18d5184912ba8dd389f86aa7710db079abcb0",
+    "README.md": "d5b104b460304161b1c1450dac5e7e9e6bcf23526c227e9d0afa439bc8debde4",
+    "db/authority.go": "a383ace8343036131563bf9718998a3bb54ab200ab34eb86585bd8fbe0b6c19d",
+    "db/authority_casefile.go": "3a6f72ebc3034cc6c51d6570cf6dc1d4b610b891a7d40aa5daa09de26580f79b",
+    "db/authority_casefile_test.go": "3dd49ffb82d826ea0f02a120e5c74e33364f6153aa8b994109b21e19de709eae",
+    "db/intercept_execution.go": "0cfeadb8985c2e33d0a5f93cba54526dbd02eb339a286df2ede4b0a0b6f3f2f4",
+    "db/schema.sql": "33a4768d6ed0918d35695651c9a66a9e4e54a1a8a323aa4831313961825f0c03",
+    "docker-compose.yml": "b22e183866d7812c7e7a2781f65a46df3a641af61e9c619a5b6b12c5f2b29e4b",
+    "docs/awootex-codex-handoff.md": "7a9e5a64175304e5e1732a05490877e1afd2101bb2bb1954e2547f70e88f1d4d",
+    "docs/wolftrap-authority-qualification-v1.json": "62dc0ad51c7e6a035ad9a8163c56227e98ab7f216b52948cddb0dc22e29100a6",
+    "docs/wolftrap-qualification-v1.json": "8ba3077216459d8f3e96919368da83ae548998b9f58108928028135332259ea0",
+    "docs/wolftrax-demo/README.md": "45283aa2716b3b8e553f39bc91f5f030556f638c916be365225f2411ce5ef12e",
+    "docs/wolftrax-demo/SHA256SUMS": "9df35a786fa91be8d2f0adfe5aa1526fa186ef3f13f7a952fc1f5434bfe8ef4f",
+    "docs/wolftrax-demo/after.json": "fd8fc8c078a020d6111fffe0981ef0f9ed492f6898b4c3ca2cbc483cda8db23d",
+    "docs/wolftrax-demo/before.json": "68089423f27672f703b605b8f5df4dd2d0e8e4a7805c6c43a91af489ebf21c20",
+    "docs/wolftrax-demo/check.mjs": "6168e359aab27ddaa002a37c0895b939eaa9cab84f99eb5bff56bd11ffcca2f3",
+    "docs/wolftrax-demo/empty.json": "ff39a181fc56b3e3642d61e43ab71c88e13e1c687d7d05a530222ce4fe78c677",
+    "docs/wolftrax-demo/import_examples.py": "b4f37f68adbc77e1b6a25428639e27401812bc69716ac4468f5a4a3916382293",
+    "docs/wolftrax-demo/restored.json": "f8dd07ae7922b3e2c77ced94b40cb8eb6ab071e6098748347f8f2dd4314800f8",
+    "docs/wolftrax-investigation-lab-v1.md": "47404b6218b7822622f113f6d9977ae0aa66bb276de9ecd7eab478b9b99966c7",
+    "go.mod": "269731165d7497ec5f3e3e7ea3f6180f51a06344c2c65f989aefb1159d0943a7",
+    "go.sum": "67fc028654540e122235d09d0133dd2c5f06347b91ce0023cf2c8595bee33972",
+    "scripts/test_wolftrap_evidence.py": "156e3e21e75ffcaeb6ba791d4f0423f365910147cf0f63beaef990f999838e88",
+    "scripts/wolftrap_evidence.py": "90a43ee3d458df762c1721a210d202d1078068c6c73c61cc17be3520b90d3d60",
+    "server/auth.go": "62beadfa8b77bc2e1df7ebbb35445565538ed76582aaf14909b1f7e8343d1dbe",
+    "server/authority.go": "b63e223bf710a23300d47568b452a93fdd4da629fa9ece0d231c8e4d2ca98a2e",
+    "server/authority_casefile.go": "dc511054e6b058c24fff4a1f632dcf96ddc97ffcdc69803d4c7f550ba27232f4",
+    "server/authority_casefile_test.go": "2e15e0b8076259b0fcc4f95176752cf970195a0ae8f34730d37d48719185663d",
+    "server/finding_traffic_export.go": "4386a517a011ae4b24de04921c4734ccc29e8751bd8117464761b4d06746d517",
+    "server/investigation_browser_test.go": "f02e4cffe9aa32028386be7cceebed2b9395de7fa286fad86da648dbd0719f87",
+    "server/investigation_demo_test.go": "a6ba46fb28c3b7bdf88eb203f8569fdd8965d3b952742058a90c6994019e0857",
+    "server/server.go": "df3758d53fd01a74b5a9699d8e331f2d3ad0cc1230b3d6797d1984cd9d04554c",
+    "server/wolftrax_export_interop_test.go": "569e57f330b86c07462e3bc7a542b612da052284381bff8f88d2d1161db78bdd",
+    "web/package-lock.json": "8b3f2cf7b4a7024085d9b266a167eab957127f4867ed6e30eff4ff62dd614f08",
+    "web/package.json": "0f6e07f93728693893dc171af3739ec96eb869a371cb41491a7c904bfae602d7",
+    "web/scripts/casefile.test.mjs": "d0d104e2b97ea7bc894a3e51db360ada8a1a702a63946623ecfb52d61c499899",
+    "web/scripts/investigation-browser.py": "ba8f132119e8ff315bea13731d3ab1f776427455ef1d481656fe2fcdefe9f197",
+    "web/scripts/investigation-pg-browser.py": "98affbf2835ad5a1e96cdffccb6e048f14d3cd8f436e6e196580819800f3f480",
+    "web/src/app/(auth)/login/page.tsx": "3e620c5d34ca9a65ea0c689a2e75a44eebb901f367d85c6d5e8b5dc79faea122",
+    "web/src/app/(auth)/setup/page.tsx": "5da5e39ac7eaded588242d69b85a6f0a227d187007e5d39e5482b6d74e897661",
+    "web/src/app/(main)/_components/sidebar/app-sidebar.tsx": "b6bf398dd3006a8d2ff6250354943105f6698be492311d0fa86588cd08623660",
+    "web/src/app/(main)/_components/sidebar/nav-main.tsx": "b6fd5b91af3c33978d22ad3d7b04528e2e7589f75ecab92d42771afa8a114030",
+    "web/src/app/(main)/function/investigation/page.tsx": "1d573d98a27249ed7f0d229541d4e1a68b46122aebe87c18e19f4bd25f69dcbb",
+    "web/src/app/(main)/function/tasks/detail/_tabs/authority-tab.tsx": "48586dff8f83e4fa852973401551b3be25409dacbcccca7adc12d425d3521f8a",
+    "web/src/app/(main)/function/tasks/detail/_tabs/sessions-tab.tsx": "26b1ae9ec25a597a5a551780ab91cdf91be2983997f33fae512374f6c5788486",
+    "web/src/app/(main)/function/tasks/detail/page.tsx": "f22865b72cdaf4630137f6c20c90d9a8cec76a0599ede8d35f89e9f7003c4641",
+    "web/src/app/(main)/layout.tsx": "808a61765561a27a35b6267b654d35523fc16562a9cefe5c1a7284b8dafc2ca7",
+    "web/src/components/approval-execution-focus.tsx": "c79cecb93f8219e4a44f31f45f2a30c12613427e88fe17f437907581e9ba91a9",
+    "web/src/components/authority-graph.tsx": "9fb9af19f5e58f4a513095fcd2dd5261a99666ff8a843398c7038ff180a85f9c",
+    "web/src/components/authority-record-browser.tsx": "c26a45ddea28133ccf035cee06042f44a9c06e7b8334244dac9b03716ce0a2f4",
+    "web/src/components/authority-record-details.tsx": "b22afa6d76129e6d1fcf5b2f34b559760b32cbd343c279aaa40fa6f706250462",
+    "web/src/components/investigation-mode.tsx": "c9f969839ac115c71bfef7c2da4899083f9988fe855e2c0db88400d2d5297cdd",
+    "web/src/config/app-config.ts": "c4c2dcded6d601e703e6410626f58f1237c8e1cdfc28fe2e40e738350b495c7f",
+    "web/src/i18n/locales/tr.json": "e3a105e353af3d15d787a9c7e5a5cd0971eb696c144657b16d9e25b73d35c531",
+    "web/src/i18n/locales/zh-CN.json": "b5c82603b24279635826c382ad5b10f7716bbcfac368519e7239fc98a5d76d62",
+    "web/src/lib/api.ts": "d583963385f4a659544e7df9d100e2f289d27753077281622d1c2b43d788bc8e",
+    "web/src/lib/authority.ts": "7c48ac2b52c830fe67403955eda57d6aff59081b48d5cd78abb728f75ef5c11a",
+    "web/src/lib/casefile.ts": "158c32871ce7c6ced2c09b2f3e099e2a8f931443c1ba110512c547e1835496b0",
+    "web/src/navigation/sidebar/sidebar-items.ts": "ae3ae954a3c7517c7b4ce43f981102549263e9602dc852a088194d289d1a983f"
+  }
+}

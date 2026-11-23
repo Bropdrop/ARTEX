@@ -2,379 +2,484 @@
 
 import * as React from "react";
 
-import {
-  ArrowLeftIcon,
-  ArrowRightIcon,
-  CircleAlertIcon,
-  ExternalLinkIcon,
-  GitBranchIcon,
-  RefreshCwIcon,
-} from "lucide-react";
+import { ArrowLeftIcon, ArrowRightIcon, GitBranchIcon, RefreshCwIcon } from "lucide-react";
 
-import { AuthorityGraph } from "@/components/authority-graph";
+import { AuthorityRecordBrowser } from "@/components/authority-record-browser";
+import { type LocateRecord, timestamp } from "@/components/authority-record-details";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { intlLocale, t } from "@/i18n";
-import { api } from "@/lib/api";
-import {
-  type AuthorityState,
-  actorState,
-  authoritySourceHref,
-  canLocateAuthoritySource,
-  correlationState,
-  decisionState,
-  executionState,
-  isAuthorityPageForScope,
-  sourceState,
-} from "@/lib/authority";
+import { Input } from "@/components/ui/input";
+import { t } from "@/i18n";
+import { api, type ResolvedAuthorityFocus } from "@/lib/api";
+import { authoritySourceHref, isAuthorityPageForScope } from "@/lib/authority";
+import { CASEFILE_MAX_BYTES, compareCases, type LoadedCase, loadCasefile, reviewerReport } from "@/lib/casefile";
 import { setVisibleInterval } from "@/lib/polling";
-import type { AuthorityPage, AuthorityRecord } from "@/lib/types";
-import { cn } from "@/lib/utils";
+import type { AuthorityPage } from "@/lib/types";
 
 const PAGE_SIZE = 20;
-const toneClasses = {
-  neutral: "border-slate-200 text-slate-600 dark:border-slate-700 dark:text-slate-300",
-  info: "border-blue-200 bg-blue-50/60 text-blue-700 dark:border-blue-800 dark:bg-blue-950/30 dark:text-blue-300",
-  warning:
-    "border-amber-200 bg-amber-50/60 text-amber-800 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-300",
-  danger: "border-rose-200 bg-rose-50/60 text-rose-700 dark:border-rose-800 dark:bg-rose-950/30 dark:text-rose-300",
-};
+type Mode = "Live" | "Frozen" | "Compare";
 
-function StateBadge({ state }: { state: AuthorityState }) {
-  return (
-    <Badge
-      variant="outline"
-      className={cn("h-auto min-h-5 whitespace-normal py-0.5 text-left", toneClasses[state.tone])}
-    >
-      {t(state.label)}
-    </Badge>
-  );
-}
-
-function timestamp(value: string | null) {
-  if (!value) return t("Not recorded");
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? t("Unrecognized timestamp") : date.toLocaleString(intlLocale);
-}
-
-function RecordDetails({ record, taskId }: { record: AuthorityRecord; taskId: string }) {
-  const [locating, setLocating] = React.useState(false);
-  const [sourceError, setSourceError] = React.useState<string | null>(null);
-  const liveRef = React.useRef(true);
-  React.useEffect(() => {
-    liveRef.current = true;
-    return () => {
-      liveRef.current = false;
-    };
-  }, []);
-
-  const locate = async () => {
-    if (locating || !canLocateAuthoritySource(record)) return;
-    setLocating(true);
-    setSourceError(null);
-    try {
-      const source = await api.interceptExecution(record.id);
-      if (!liveRef.current) return;
-      const href = authoritySourceHref(record, source, taskId);
-      if (!href) throw new Error(t("The execution source does not match this task."));
-      // Session focus is initialized on mount. A full navigation follows the
-      // existing approval source links and opens the Sessions tab reliably.
-      window.location.assign(href);
-    } catch (error) {
-      if (liveRef.current)
-        setSourceError(error instanceof Error ? error.message : t("Unable to locate the corresponding execution"));
-    } finally {
-      if (liveRef.current) setLocating(false);
-    }
-  };
-
-  const facts = [
-    { label: t("Decision source"), value: t(sourceState(record.decision_source)) },
-    { label: t("Decided by"), value: t(actorState(record.decided_by)) },
-    { label: t("Captured rule name"), value: record.rule_name || t("Not recorded") },
-    { label: t("Recorded at"), value: timestamp(record.created_at) },
-    { label: t("Decision recorded at"), value: timestamp(record.decided_at) },
-    { label: t("Tool result recorded at"), value: timestamp(record.execution_ended_at) },
-  ];
-  const bindings = [
-    { label: t("Run ID"), value: record.run_id },
-    { label: t("Tool call ID"), value: record.tool_use_id },
-    { label: t("Input digest"), value: record.input_digest },
-    { label: t("Configuration digest"), value: record.config_digest },
-    { label: t("Model input digest"), value: record.model_input_digest },
-  ];
-
-  return (
-    <Card className="min-w-0 gap-0 py-0">
-      <div className="flex flex-wrap items-start justify-between gap-3 border-b p-4">
-        <div>
-          <p className="text-muted-foreground text-xs">{t("Approval record #{id}", { id: record.id })}</p>
-          <h3 className="mt-1 break-words font-semibold">{record.tool_name || t("Not recorded")}</h3>
-        </div>
-        <StateBadge state={decisionState(record.status)} />
-      </div>
-      <AuthorityGraph record={record} />
-      <div className="space-y-4 border-t p-4">
-        <p className="text-muted-foreground text-xs leading-relaxed">
-          {t(
-            "Solid lines connect recorded fields. Dashed lines mark unresolved or missing evidence. A recorded call ID is checked again when opening its source.",
-          )}
-        </p>
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex flex-wrap gap-2">
-            <StateBadge state={correlationState(record)} />
-            <StateBadge state={executionState(record)} />
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => void locate()}
-            disabled={locating || !canLocateAuthoritySource(record)}
-          >
-            <ExternalLinkIcon />
-            {locating ? t("Locating source") : t("Open original execution")}
-          </Button>
-        </div>
-        {sourceError && (
-          <p role="alert" className="break-words text-destructive text-xs">
-            {sourceError}
-          </p>
-        )}
-        <dl className="grid gap-x-6 gap-y-3 text-xs sm:grid-cols-2 xl:grid-cols-3">
-          {facts.map(({ label, value }) => (
-            <div key={label}>
-              <dt className="text-muted-foreground">{label}</dt>
-              <dd className="mt-1 break-words">{value}</dd>
-            </div>
-          ))}
-        </dl>
-        <details className="rounded-lg border p-3 text-xs">
-          <summary className="cursor-pointer font-medium">{t("Recorded identifiers and digests")}</summary>
-          <p className="my-3 text-muted-foreground leading-relaxed">
-            {t(
-              "These values are recorded bindings. This view does not verify their hashes or authenticate the agent, owner, or capture.",
-            )}
-          </p>
-          <dl className="space-y-3">
-            {bindings.map(({ label, value }) => (
-              <div key={label}>
-                <dt className="text-muted-foreground">{label}</dt>
-                <dd className="mt-1 break-all font-mono">{value || t("Not recorded")}</dd>
-              </div>
-            ))}
-          </dl>
-        </details>
-      </div>
-    </Card>
-  );
-}
-
-function AuthorityTabContent({ taskId }: { taskId: string }) {
+function LiveRecords({ taskId }: { taskId: string }) {
   const [page, setPage] = React.useState(1);
-  const [data, setData] = React.useState<AuthorityPage | null>(null);
-  const [selectedId, setSelectedId] = React.useState<number | null>(null);
+  const [data, setData] = React.useState<AuthorityPage>();
   const [loading, setLoading] = React.useState(true);
-  const [error, setError] = React.useState<string | null>(null);
-  const [updatedAt, setUpdatedAt] = React.useState<string | null>(null);
-  const refreshRef = React.useRef<() => Promise<void>>(() => Promise.resolve());
-
+  const [error, setError] = React.useState("");
+  const [updated, setUpdated] = React.useState("");
+  const refresh = React.useRef<() => Promise<void>>(() => Promise.resolve());
   React.useEffect(() => {
-    let disposed = false;
-    let inFlight = false;
-    setData(null);
-    setSelectedId(null);
-    setError(null);
-    setUpdatedAt(null);
+    const controller = new AbortController();
+    let pending = false;
     const load = async () => {
-      if (disposed || inFlight) return;
-      inFlight = true;
+      if (pending || controller.signal.aborted) return;
+      pending = true;
       setLoading(true);
       try {
-        const response = await api.authorityPage(taskId, page, PAGE_SIZE);
-        if (disposed) return;
-        if (!isAuthorityPageForScope(response, taskId, page, PAGE_SIZE))
+        const result = await api.authorityPage(taskId, page, PAGE_SIZE, controller.signal);
+        if (controller.signal.aborted) return;
+        if (!isAuthorityPageForScope(result, taskId, page, PAGE_SIZE))
           throw new Error(t("The authority response does not match this task and page."));
-        setData(response);
-        setSelectedId((current) =>
-          response.items.some((record) => record.id === current) ? current : (response.items[0]?.id ?? null),
-        );
-        setError(null);
-        setUpdatedAt(new Date().toISOString());
-      } catch (err) {
-        if (!disposed) setError(err instanceof Error ? err.message : t("Unable to load authority records"));
+        const lastPage = Math.max(1, Math.ceil(result.total / PAGE_SIZE));
+        if (page > lastPage && result.items.length === 0) {
+          setPage(lastPage);
+          return;
+        }
+        setData(result);
+        setError("");
+        setUpdated(new Date().toISOString());
+      } catch (e) {
+        if (!controller.signal.aborted)
+          setError(e instanceof Error ? e.message : t("Unable to load authority records"));
       } finally {
-        inFlight = false;
-        if (!disposed) setLoading(false);
+        pending = false;
+        if (!controller.signal.aborted) setLoading(false);
       }
     };
-    refreshRef.current = load;
+    refresh.current = load;
+    setData(undefined);
+    setError("");
+    setUpdated("");
     void load();
-    const stopPolling = setVisibleInterval(load, 20_000);
+    const stop = setVisibleInterval(load, 20_000);
     return () => {
-      disposed = true;
-      stopPolling();
+      controller.abort();
+      stop();
     };
   }, [taskId, page]);
-
-  const selected = data?.items.find((record) => record.id === selectedId);
-  const pages = Math.max(1, Math.ceil((data?.total ?? 0) / PAGE_SIZE));
-  const changePage = (next: number) => {
-    setData(null);
-    setSelectedId(null);
-    setPage(next);
+  const scoped = data?.page === page && data.task_id === taskId ? data : undefined;
+  const records = React.useMemo(() => scoped?.items.map((row) => ({ ...row, id: String(row.id) })) ?? [], [scoped]);
+  const locate: LocateRecord = async (record) => {
+    const original = scoped?.items.find((row) => String(row.id) === record.id);
+    if (!original) throw new Error(t("The execution source does not match this task."));
+    const source = await api.interceptExecution(original.id);
+    const href = authoritySourceHref(original, source, taskId);
+    if (!href) throw new Error(t("The execution source does not match this task."));
+    return () => window.location.assign(href);
   };
-
   return (
-    <section className="space-y-4" aria-label={t("Authority")}>
-      <Card className="gap-3 p-4">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div className="flex items-start gap-3">
-            <span className="rounded-lg bg-blue-50 p-2 text-blue-600 dark:bg-blue-950 dark:text-blue-300">
-              <GitBranchIcon className="size-5" />
-            </span>
-            <div>
-              <h2 className="font-semibold">{t("Authority graph")}</h2>
-              <p className="mt-1 text-muted-foreground text-xs leading-relaxed">
-                {t("Explore recorded decisions, tool outcomes, and the evidence still missing.")}
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <Badge variant="outline">{t("Read only")}</Badge>
-            <Button variant="outline" size="sm" disabled={loading} onClick={() => void refreshRef.current()}>
-              <RefreshCwIcon className={loading ? "animate-spin" : undefined} />
-              {t("Refresh")}
-            </Button>
-          </div>
-        </div>
-        <p className="text-muted-foreground text-xs leading-relaxed">
-          {t(
-            "Coverage is limited to recorded interception decisions. Some actions have no interception record, and a target approval can be shared by multiple calls.",
-          )}
-        </p>
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t pt-3 text-xs">
-          <span>
-            {t("Owner grants")}: <span className="text-amber-700 dark:text-amber-300">{t("Not recorded")}</span>
-          </span>
-          <span>
-            {t("Independent effect evidence")}:{" "}
-            <span className="text-amber-700 dark:text-amber-300">{t("Not recorded")}</span>
-          </span>
-          <span className="ml-auto text-muted-foreground" aria-live="polite">
-            {updatedAt ? t("Last refreshed: {time}", { time: timestamp(updatedAt) }) : t("No successful refresh yet")}
-          </span>
-        </div>
-      </Card>
-
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+        <p>{updated ? t("Last refreshed: {time}", { time: timestamp(updated) }) : t("No successful refresh yet")}</p>
+        <Button size="sm" variant="outline" disabled={loading} onClick={() => void refresh.current()}>
+          <RefreshCwIcon />
+          {t("Refresh")}
+        </Button>
+      </div>
       {error && (
-        <div
-          role="alert"
-          className="flex items-start gap-2 rounded-lg border border-amber-300 bg-amber-50/60 p-3 text-amber-900 text-xs dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-200"
-        >
-          <CircleAlertIcon className="mt-0.5 size-4 shrink-0" />
-          <div>
-            <p className="font-medium">
-              {data ? t("Refresh failed. Displayed records may be stale.") : t("Unable to load authority records")}
-            </p>
-            <p className="mt-1 break-words">{error}</p>
-            {!data && page > 1 && (
-              <Button className="mt-2" variant="outline" size="sm" onClick={() => changePage(1)}>
-                <ArrowLeftIcon />
-                {t("Return to first page")}
-              </Button>
-            )}
-          </div>
-        </div>
-      )}
-      {!data && loading && (
-        <Card className="p-8 text-center text-muted-foreground text-sm" role="status">
-          {t("Loading authority records")}
+        <Card role="alert" className="gap-1 p-3 text-sm">
+          <strong>
+            {scoped ? t("Refresh failed. Displayed records may be stale.") : t("Unable to load authority records")}
+          </strong>
+          <span>{error}</span>
+          {!scoped && page > 1 && (
+            <Button variant="outline" onClick={() => setPage(1)}>
+              {t("Return to first page")}
+            </Button>
+          )}
         </Card>
       )}
-      {data && (
-        <div className="grid items-start gap-4 xl:grid-cols-[280px_minmax(0,1fr)]">
-          <Card className="min-w-0 gap-0 py-0">
-            <div className="border-b p-4">
-              <h3 className="font-medium text-sm">{t("Recorded decisions")}</h3>
-              <p className="mt-1 text-muted-foreground text-xs">
-                {t("{count} interception records", { count: data.total })}
-              </p>
-            </div>
-            {data.items.length === 0 ? (
-              <div className="space-y-2 p-5 text-sm">
-                <p>
-                  {page === 1 ? t("No recorded interception decisions for this task.") : t("No records on this page.")}
-                </p>
-                <p className="text-muted-foreground text-xs leading-relaxed">
-                  {t("An empty view does not establish that no actions occurred.")}
-                </p>
-              </div>
-            ) : (
-              <ul className="max-h-[560px] divide-y overflow-y-auto" aria-label={t("Recorded interception decisions")}>
-                {data.items.map((record) => (
-                  <li key={record.id}>
-                    <button
-                      type="button"
-                      className={cn(
-                        "w-full space-y-2 p-3.5 text-left transition-colors hover:bg-muted/60 focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-[-2px]",
-                        selectedId === record.id && "bg-blue-50/60 dark:bg-blue-950/20",
-                      )}
-                      aria-pressed={selectedId === record.id}
-                      onClick={() => setSelectedId(record.id)}
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="truncate font-medium text-sm">{record.tool_name || t("Not recorded")}</span>
-                        <span className="text-[11px] text-muted-foreground">#{record.id}</span>
-                      </div>
-                      <div>
-                        <StateBadge state={decisionState(record.status)} />
-                      </div>
-                      <p className="truncate text-muted-foreground text-xs">{record.agent_name || t("Not recorded")}</p>
-                      <p className="text-[10px] text-muted-foreground">{timestamp(record.created_at)}</p>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-            <div className="flex items-center justify-between gap-2 border-t p-3">
+      {loading && !scoped && <p role="status">{t("Loading authority records")}</p>}
+      {scoped && (
+        <>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-xs">{t("{count} interception records", { count: scoped.total })}</p>
+            <div className="flex items-center gap-2">
               <Button
-                variant="outline"
                 size="icon-sm"
+                variant="outline"
                 aria-label={t("Previous page")}
-                disabled={loading || page <= 1}
-                onClick={() => changePage(page - 1)}
+                disabled={page <= 1 || loading}
+                onClick={() => setPage(page - 1)}
               >
                 <ArrowLeftIcon />
               </Button>
-              <span className="text-muted-foreground text-xs">
-                {t("Page {page} of {pages}", { page, pages: Math.max(page, pages) })}
+              <span className="text-xs">
+                {t("Page {page} of {pages}", { page, pages: Math.max(1, Math.ceil(scoped.total / PAGE_SIZE)) })}
               </span>
               <Button
-                variant="outline"
                 size="icon-sm"
+                variant="outline"
                 aria-label={t("Next page")}
-                disabled={loading || page >= pages}
-                onClick={() => changePage(page + 1)}
+                disabled={page * PAGE_SIZE >= scoped.total || loading}
+                onClick={() => setPage(page + 1)}
               >
                 <ArrowRightIcon />
               </Button>
             </div>
-          </Card>
-          {selected ? (
-            <RecordDetails key={`${taskId}:${selected.id}`} record={selected} taskId={taskId} />
-          ) : (
-            <Card className="p-8 text-center text-muted-foreground text-sm">
-              {t("Select a recorded decision to inspect its evidence graph.")}
+          </div>
+          <AuthorityRecordBrowser key={page} records={records} live onLocate={locate} />
+        </>
+      )}
+    </div>
+  );
+}
+
+function download(filename: string, data: BlobPart, type: string) {
+  const url = URL.createObjectURL(new Blob([data], { type }));
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.click();
+  window.setTimeout(() => URL.revokeObjectURL(url), 15_000);
+}
+
+function FileInput({ label, onFile }: { label: string; onFile: (file: File) => void }) {
+  const id = React.useId();
+  return (
+    <label htmlFor={id} className="block min-w-0 space-y-1 font-medium text-sm">
+      {label}
+      <Input
+        id={id}
+        type="file"
+        accept=".json,application/json"
+        onChange={(e) => {
+          const file = e.currentTarget.files?.[0];
+          e.currentTarget.value = "";
+          if (file) onFile(file);
+        }}
+      />
+    </label>
+  );
+}
+
+function CaptureSummary({ loaded }: { loaded: LoadedCase }) {
+  const file = loaded.data;
+  return (
+    <div className="min-w-0 space-y-1 text-xs [overflow-wrap:anywhere]">
+      <p className="font-medium">
+        {file.synthetic && (
+          <Badge variant="outline" className="mr-2">
+            {t("Synthetic demonstration")}
+          </Badge>
+        )}
+        {t("Task #{id}", { id: file.task_id })} · {t("Captured at {time}", { time: file.captured_at })}
+      </p>
+      <p>
+        {t("Source namespace")}: {file.source_namespace ?? t("Not recorded")} · {t("Dataset incarnation")}:{" "}
+        {file.dataset_incarnation ?? t("Not recorded")}
+      </p>
+      <p>
+        {file.producer} · {file.schema} · {file.selection} · {file.coverage} ·{" "}
+        {t("{count} interception records", { count: file.count })}
+      </p>
+      <p className="font-mono">SHA-256 {loaded.digest}</p>
+    </div>
+  );
+}
+
+interface Props {
+  taskId: string;
+  onOfflineChange?: (offline: boolean) => void;
+  onSourceResolved?: (value: ResolvedAuthorityFocus) => void;
+}
+
+// Read only a bounded response, including when a server or proxy omits Content-Length.
+async function freeze(taskId: string, signal: AbortSignal) {
+  const response = await api.authorityCasefile(taskId, signal);
+  const expected = response.headers.get("X-Casefile-SHA256");
+  if (!expected || !/^[a-f0-9]{64}$/.test(expected))
+    throw new Error(t("The capture response has no valid byte digest."));
+  const reader = response.body?.getReader();
+  if (!reader) throw new Error(t("The capture response was empty."));
+  const chunks: Uint8Array<ArrayBuffer>[] = [];
+  let size = 0;
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      size += value.byteLength;
+      if (size > CASEFILE_MAX_BYTES) {
+        await reader.cancel();
+        throw new Error(t("The casefile exceeds the size limit."));
+      }
+      chunks.push(new Uint8Array(value));
+    }
+  } finally {
+    reader.releaseLock();
+  }
+  const loaded = await loadCasefile(new Blob(chunks), expected);
+  if (loaded.data.task_id !== taskId) throw new Error(t("The capture response does not match this task."));
+  return loaded;
+}
+
+function Workbench({ taskId, onOfflineChange, onSourceResolved }: Props) {
+  const [mode, setMode] = React.useState<Mode>(taskId ? "Live" : "Frozen");
+  const [current, setCurrent] = React.useState<LoadedCase>();
+  const [earlier, setEarlier] = React.useState<LoadedCase>();
+  const [later, setLater] = React.useState<LoadedCase>();
+  const [side, setSide] = React.useState<"earlier" | "later">("later");
+  const [error, setError] = React.useState("");
+  const [busy, setBusy] = React.useState(false);
+  const op = React.useRef<AbortController | undefined>(undefined);
+  React.useEffect(() => () => op.current?.abort(), []);
+  React.useEffect(() => {
+    onOfflineChange?.(mode !== "Live");
+  }, [mode, onOfflineChange]);
+  const changeMode = (next: Mode) => {
+    op.current?.abort();
+    setBusy(false);
+    setError("");
+    setMode(next);
+  };
+  const load = async (slot: "current" | "earlier" | "later", file?: File) => {
+    op.current?.abort();
+    const controller = new AbortController();
+    op.current = controller;
+    setBusy(true);
+    setError("");
+    try {
+      const result = file ? await loadCasefile(file) : await freeze(taskId, controller.signal);
+      if (controller.signal.aborted) return;
+      if (slot === "current") {
+        setCurrent(result);
+        if (current) {
+          setEarlier(current);
+          setLater(result);
+        } else {
+          setEarlier(result);
+          setLater(undefined);
+        }
+        setMode("Frozen");
+      } else if (slot === "earlier") {
+        setEarlier(result);
+        setSide("earlier");
+      } else {
+        setLater(result);
+        setSide("later");
+      }
+    } catch (e) {
+      if (!controller.signal.aborted) {
+        if (file) {
+          if (slot === "earlier") setEarlier(undefined);
+          else if (slot === "later") setLater(undefined);
+          else setCurrent(undefined);
+        }
+        setError(e instanceof Error ? t(e.message) : t("Unable to read casefile"));
+      }
+    } finally {
+      if (!controller.signal.aborted) setBusy(false);
+    }
+  };
+  const comparison = React.useMemo(
+    () => (mode === "Compare" && earlier && later ? compareCases(earlier.data, later.data) : undefined),
+    [mode, earlier, later],
+  );
+  const selectedSide = side === "later" ? (later ?? earlier) : (earlier ?? later);
+  const loaded = mode === "Compare" ? selectedSide : current;
+  const file = loaded?.data;
+  const captureLabel = loaded === earlier ? t("Earlier casefile") : t("Later casefile");
+  const namespace = file?.source_namespace;
+  const incarnation = file?.dataset_incarnation;
+  const locate: LocateRecord | undefined =
+    file?.task_id === taskId && namespace && incarnation && onSourceResolved
+      ? async (record) => {
+          const source = await api.authorityRecordedSource(taskId, record.id, {
+            source_namespace: namespace,
+            dataset_incarnation: incarnation,
+            run_id: record.run_id,
+            tool_use_id: record.tool_use_id,
+            tool_name: record.tool_name,
+          });
+          if (
+            source.task_id !== taskId ||
+            ("conversation_id" in source && source.conversation_id != null) ||
+            !Number.isSafeInteger(source.seq) ||
+            source.seq <= 0 ||
+            typeof source.session !== "string" ||
+            !/^(plan|main:[0-9]+|intent:[1-9][0-9]*)$/.test(source.session)
+          ) {
+            throw new Error(t("The execution source does not match this task."));
+          }
+          return () => onSourceResolved({ id: record.id, source: { ...source, items: [], conversation_id: null } });
+        }
+      : undefined;
+  const exportReport = () => {
+    if (!loaded) return;
+    try {
+      const report = mode === "Compare" && earlier && later ? reviewerReport(earlier, later) : reviewerReport(loaded);
+      download(`wolftrax-${loaded.data.task_id}-report.html`, report, "text/html;charset=utf-8");
+    } catch (e) {
+      setError(e instanceof Error ? t(e.message) : t("Unable to export report"));
+    }
+  };
+  const filename = loaded ? `wolftrax-${loaded.data.task_id}-${loaded.digest.slice(0, 12)}.json` : "";
+  const modes: Mode[] = taskId ? ["Live", "Frozen", "Compare"] : ["Frozen", "Compare"];
+  return (
+    <section aria-label={t("Authority")} className="min-w-0 space-y-4">
+      <Card className="gap-3 p-4">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <span className="rounded-lg bg-muted p-2">
+              <GitBranchIcon className="size-5" />
+            </span>
+            <h2 className="font-semibold">{t("Investigation Lab")}</h2>
+          </div>
+          <fieldset aria-label={t("Investigation mode")} className="flex flex-wrap gap-1">
+            {modes.map((item) => (
+              <Button
+                key={item}
+                size="sm"
+                variant={mode === item ? "default" : "outline"}
+                aria-pressed={mode === item}
+                onClick={() => changeMode(item)}
+              >
+                {t(item)}
+              </Button>
+            ))}
+          </fieldset>
+        </div>
+        <p className="text-muted-foreground text-xs">
+          {t(
+            "Coverage is limited to recorded interception decisions. Some actions have no interception record, and a target approval can be shared by multiple calls.",
+          )}
+        </p>
+        <p className="text-xs">
+          {t("Owner grants")}: {t("Not recorded")} · {t("Independent effect evidence")}: {t("Not recorded")}
+        </p>
+        {mode === "Live" && (
+          <div className="flex flex-wrap items-center justify-between gap-2 border-t pt-3">
+            <p className="text-xs">{t("Freeze the complete task selection while the assessment continues.")}</p>
+            <Button size="sm" disabled={busy} onClick={() => void load("current")}>
+              {t("Freeze task")}
+            </Button>
+          </div>
+        )}
+        {mode === "Frozen" && <FileInput label={t("Open casefile")} onFile={(f) => void load("current", f)} />}
+        {mode === "Compare" && (
+          <div className="grid min-w-0 gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <FileInput label={t("Open earlier casefile")} onFile={(f) => void load("earlier", f)} />
+              {earlier && <CaptureSummary loaded={earlier} />}
+            </div>
+            <div className="space-y-2">
+              <FileInput label={t("Open later casefile")} onFile={(f) => void load("later", f)} />
+              {later && <CaptureSummary loaded={later} />}
+            </div>
+          </div>
+        )}
+      </Card>
+      {error && (
+        <p role="alert" className="break-words rounded-lg border p-3 text-destructive text-sm">
+          {error}
+        </p>
+      )}
+      {busy && (
+        <p role="status" className="text-xs">
+          {t("Reading casefile…")}
+        </p>
+      )}
+      {mode === "Live" ? (
+        <LiveRecords taskId={taskId} />
+      ) : (
+        <>
+          {comparison && (
+            <Card className="gap-2 p-4 text-sm">
+              <h3 className="font-medium">
+                {comparison.compatible ? t("Snapshot comparison") : t("Automatic comparison unavailable")}
+              </h3>
+              <p>{t(comparison.reason)}</p>
+              {comparison.compatible && (
+                <p>
+                  {t("Added {added} · Absent from later snapshot {absent} · Changed {changed}", {
+                    added: comparison.changes.filter((c) => c.kind === "added").length,
+                    absent: comparison.changes.filter((c) => c.kind === "absent").length,
+                    changed: comparison.changes.filter((c) => c.kind === "changed").length,
+                  })}
+                </p>
+              )}
             </Card>
           )}
-        </div>
+          {loaded && (
+            <Card className="gap-3 p-4">
+              {mode === "Compare" && (
+                <fieldset aria-label={t("Inspect casefile")} className="flex flex-wrap gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    aria-pressed={loaded === earlier}
+                    disabled={!earlier}
+                    onClick={() => setSide("earlier")}
+                  >
+                    {t("Inspect earlier")}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    aria-pressed={loaded === later}
+                    disabled={!later}
+                    onClick={() => setSide("later")}
+                  >
+                    {t("Inspect later")}
+                  </Button>
+                </fieldset>
+              )}
+              <h3 className="font-medium text-sm">{mode === "Compare" ? captureLabel : t("Frozen casefile")}</h3>
+              {mode !== "Compare" && <CaptureSummary loaded={loaded} />}
+              <p className="text-muted-foreground text-xs">
+                {t(
+                  "This historical database snapshot uses producer-asserted metadata. Matching hashes check bytes. Origin is unauthenticated and the security claim is unassessed.",
+                )}
+              </p>
+              <p className="text-muted-foreground text-xs">
+                {t(
+                  "A recorded approval and an agent display label cannot establish target-owner authorization or authenticated identity. Tool-reported success lacks an independent receipt.",
+                )}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => download(filename, loaded.bytes, "application/json")}
+                >
+                  {t("Download casefile")}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => download(`${filename}.sha256`, `${loaded.digest}  ${filename}\n`, "text/plain")}
+                >
+                  {t("Download SHA-256")}
+                </Button>
+                <Button size="sm" onClick={exportReport}>
+                  {t("Export reviewer report")}
+                </Button>
+              </div>
+            </Card>
+          )}
+          {loaded && (
+            <AuthorityRecordBrowser
+              key={`${mode}:${loaded.digest}`}
+              records={loaded.data.records}
+              comparison={comparison}
+              onLocate={locate}
+            />
+          )}
+        </>
       )}
     </section>
   );
 }
 
-export function AuthorityTab({ taskId }: { taskId: string }) {
-  // Task changes discard selection, stale data, and in-flight navigation state.
-  return <AuthorityTabContent key={taskId} taskId={taskId} />;
+export function AuthorityTab(props: Props) {
+  return <Workbench key={props.taskId} {...props} />;
 }
