@@ -3,6 +3,8 @@
 import type { ReactNode } from "react";
 import * as React from "react";
 
+import { usePathname } from "next/navigation";
+
 import { AppSidebar } from "@/app/(main)/_components/sidebar/app-sidebar";
 import { InvestigationMode } from "@/components/investigation-mode";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
@@ -33,7 +35,9 @@ export default function Layout({ children }: Readonly<{ children: ReactNode }>) 
   // Client-side auth gate — replaces the Next proxy/middleware that static export
   // disables. No token → bounce to /login; render nothing until confirmed so no
   // protected UI (or its API calls) flashes for a logged-out visitor.
-  const investigation = React.useState(false);
+  const pathname = usePathname();
+  const standaloneReader = pathname.replace(/\/+$/, "") === "/function/investigation";
+  const [historicalTask, setHistoricalTask] = React.useState(false);
   const [authed, setAuthed] = React.useState(false);
   React.useEffect(() => {
     if (auth.getToken()) {
@@ -62,7 +66,7 @@ export default function Layout({ children }: Readonly<{ children: ReactNode }>) 
   if (!authed) return null;
 
   return (
-    <InvestigationMode.Provider value={investigation}>
+    <InvestigationMode.Provider value={[standaloneReader || historicalTask, setHistoricalTask]}>
       <SidebarProvider
         defaultOpen={defaultOpen}
         style={
