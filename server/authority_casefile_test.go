@@ -77,7 +77,7 @@ func TestCasefileHTTP(t *testing.T) {
 	}
 	path := f.path + "/casefile"
 	get := func() *httptest.ResponseRecorder { return f.request("GET", path, "", true) }
-	if w := f.request("GET", path, "", false); w.Code != 401 {
+	if w := f.request("GET", path, "", false); w.Code != 401 || w.Header().Get("Cache-Control") != "no-store" {
 		t.Fatalf("unauthenticated export: %d", w.Code)
 	}
 	for _, p := range []string{path + "?page=1", "/api/tasks/0" + f.scope + "/authority/casefile"} {

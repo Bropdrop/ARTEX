@@ -50,6 +50,7 @@ func authorityPageParams(q url.Values) (int, int, error) {
 // taskAuthority is observational only. It never dispatches a tool, approves a
 // request, or upgrades a recorded tool result into independent effect proof.
 func (s *Server) taskAuthority(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Cache-Control", "no-store")
 	taskID, err := authorityTaskID(r.PathValue("id"))
 	if err != nil {
 		writeErr(w, http.StatusBadRequest, err.Error())
@@ -79,6 +80,5 @@ func (s *Server) taskAuthority(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, http.StatusInternalServerError, "unable to load authority records")
 		return
 	}
-	w.Header().Set("Cache-Control", "no-store")
 	writeJSON(w, http.StatusOK, result)
 }
