@@ -20,6 +20,7 @@ import type {
   TaskCredential,
   TaskCredentialInput,
   Audit,
+  AuthorityPage,
   BatchCategoryItem,
   BatchControlItem,
   ChatAttachment,
@@ -1453,6 +1454,11 @@ export const api = {
       items: arr(r.items),
       total: r.total ?? r.items?.length ?? 0,
     })),
+
+  authorityPage: (taskId: string, page = 1, size = 20) =>
+    get<AuthorityPage>(
+      `/tasks/${encodeURIComponent(taskId)}/authority?${new URLSearchParams({ page: String(page), size: String(size) })}`,
+    ),
 
   // ---- intercept tool-config (global tool interception scope) ----
   interceptGetToolConfig: async (): Promise<{ enabled_tools: string[] }> => {
