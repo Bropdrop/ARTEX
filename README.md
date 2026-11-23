@@ -1,5 +1,7 @@
-> **GovernableIntelligence / WolfTrap development fork.** Based on the public
+> **Awootex — Bropdrop / WolfTrap development fork.** Based on the public
 > [BaaRai/ARTEX](https://github.com/BaaRai/ARTEX) continuation of Autumn-27's ARTEX.
+> Development repository: [Bropdrop/ARTEX](https://github.com/Bropdrop/ARTEX).
+> Start here for the [Codex review handoff](docs/awootex-codex-handoff.md).
 > Additions include an [offline evidence referee](docs/wolftrap-evidence-referee.md)
 > for existing ARTEX finding exports and a native
 > [Authority view](docs/wolftrap-authority-graph-v1.md) of recorded interception decisions.
