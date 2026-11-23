@@ -1545,6 +1545,43 @@ export interface InterceptApprovalRow extends InterceptPending {
   rule_name: string; // "" if rule was deleted
 }
 
+// Sanitized task-scoped projection of recorded interception decisions. These
+// records do not constitute a complete action ledger or independent effect proof.
+export interface AuthorityRecord {
+  id: number;
+  task_id: string;
+  agent_name: string;
+  tool_name: string;
+  status: string;
+  decision_source: string;
+  decided_by: string;
+  created_at: string;
+  decided_at: string | null;
+  audit_present: boolean;
+  correlation: string;
+  run_id: string;
+  tool_use_id: string;
+  input_digest: string;
+  config_digest: string;
+  model_input_digest: string;
+  rule_name: string;
+  initial_action: string;
+  effective_action: string;
+  execution_status: string;
+  execution_ended_at: string | null;
+}
+
+export interface AuthorityPage {
+  task_id: string;
+  items: AuthorityRecord[];
+  total: number;
+  page: number;
+  size: number;
+  coverage: "recorded_interception_decisions";
+  owner_grant: "not_recorded";
+  independent_effect: "not_recorded";
+}
+
 // ── Asset sync (ScopeSentry data source) ──────────────────────────────────────────────
 export interface SSProject {
   id: string; // MongoDB ObjectID — used as filter.project

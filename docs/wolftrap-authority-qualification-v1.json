@@ -1,0 +1,115 @@
+{
+  "schema_version": 1,
+  "increment": "WolfTrap Authority Graph v1",
+  "checked_at": "2026-11-23T18:09:40.724738+00:00",
+  "base_commit": "07f8770878e5f77d949f3c93fdc8f2d3ee58ab06",
+  "branch": "feat/wolftrap-authority-graph-v1",
+  "scope": "Native read-only projection of recorded interception decisions; no new execution authority or effect-verification guarantee.",
+  "toolchain": {
+    "go": "1.26.11",
+    "postgresql": "16.15",
+    "node": "24.22.3",
+    "npm": "11.19.1",
+    "python": "3.12.14"
+  },
+  "checks": [
+    {
+      "command": "go test ./db ./server -run Authority -count=1 -json",
+      "environment": "Disposable local PostgreSQL, populated only by synthetic test fixtures",
+      "result": "passed",
+      "pass": 18,
+      "fail": 0,
+      "skip": 0,
+      "top_level_pass": 6
+    },
+    {
+      "command": "go test ./db ./server ./intercept -run '^(TestInterceptExecutionNavigation|TestInterceptDetailHTTP|TestTrace.*)$' -count=1 -json",
+      "environment": "Fresh disposable local PostgreSQL",
+      "result": "passed",
+      "pass": 9,
+      "fail": 0,
+      "skip": 0,
+      "top_level_pass": 7
+    },
+    {
+      "command": "cd web && npm run test:authority",
+      "result": "passed",
+      "pass": 25,
+      "fail": 0,
+      "skip": 0
+    },
+    {
+      "command": "cd web && npm run test:polling",
+      "result": "passed",
+      "pass": 3,
+      "fail": 0,
+      "skip": 0
+    },
+    {
+      "command": "cd web && npm run test:i18n",
+      "result": "passed",
+      "pass": 5,
+      "fail": 0,
+      "skip": 0,
+      "dictionary_coverage": "passed"
+    },
+    {
+      "command": "python3 -m unittest discover -s scripts -p 'test_wolftrap_evidence.py' -v",
+      "result": "passed",
+      "pass": 42,
+      "fail": 0,
+      "skip": 0
+    },
+    {
+      "command": "cd web && npx tsc --noEmit --incremental false",
+      "result": "passed"
+    },
+    {
+      "command": "cd web && biome check src/lib/authority.ts src/components/authority-graph.tsx 'src/app/(main)/function/tasks/detail/_tabs/authority-tab.tsx' scripts/authority.test.mjs",
+      "result": "passed",
+      "warnings": 0
+    },
+    {
+      "command": "cd web && npm run build:static",
+      "result": "passed"
+    },
+    {
+      "command": "gofmt on added Go files; git diff --check",
+      "result": "passed"
+    }
+  ],
+  "review_corrections": [
+    "Authority reads stored decision_source; it does not infer legacy sources from rule IDs or reason prefixes.",
+    "Opening a checked original call performs full navigation so the existing Sessions view initializes its approval focus.",
+    "Runtime response validation rejects malformed record fields and unexpected v1 evidence claims.",
+    "A failed later-page fetch offers a return to the first page as well as a refresh retry."
+  ],
+  "limits": [
+    "Rendered browser layout and interaction review did not complete: local preview access was blocked by the execution/browser environment. Desktop/mobile source navigation and stale-refresh interaction remain review gates.",
+    "The complete upstream test suite, runtime containment, live capture/export integration and operational deployment were not qualified.",
+    "This projection covers recorded interception decisions, not a complete action ledger. Shared target approvals are not counted as individual dispatches.",
+    "No signed owner grants or independent effect receipts exist in this projection; tool-reported success does not change those states.",
+    "Stored call correlation is not independent verification of source availability, digest integrity, origin or target effects.",
+    "No separate Codex Cloud task was launched: its task endpoint rejected the saved login with HTTP 401."
+  ],
+  "source_sha256": {
+    ".github/workflows/ci.yml": "8ae0699bd4cff52a3c6f9509f6934a1c359fa7019d11a00a944a5504b4dd872a",
+    "README.md": "3c8a0bb80459f76cc9db7f34a44e2e1e5e3f5aacc0811f92b5f3a8dda760b9bd",
+    "db/authority.go": "aa88f46ad4296b6e2d0547a3369ca47c88168cf058a8d6778fd81cf761e5318d",
+    "db/authority_test.go": "fb884d4354fb72d5575d1340addbbdb75a078832722501346a3502fc310d1705",
+    "docs/wolftrap-authority-graph-v1.md": "7ec43aef1b4e7e3b47cff66e73a05da426e01b789da93ca68b27e83e697ae19a",
+    "server/authority.go": "1d8e0958183b504635808854536b98276bba8b37688c188678092926f3ee35f8",
+    "server/authority_test.go": "a185c3ae949281953a6d1cebbf0f9333060172fbe722646fcb2feacf0cb6b31c",
+    "server/server.go": "dd7631d63a929f4203df6de2b0f90fbd9b5cae94a278af1dfc48128a735dda55",
+    "web/package.json": "dbff7fbfcfdf197ddec5d3a2102b9bc367ac9eba3a0ec4afa9b778a3bc5b64b9",
+    "web/scripts/authority.test.mjs": "cd7c77148e36c4087d9dcd0a766843ce4822c4edf81cbb3dc5e0df5bfa299311",
+    "web/src/app/(main)/function/tasks/detail/page.tsx": "bacedc55a7ca0d9a4d63e8917c880c1517f8c4ad3ffc59075036781a495b9774",
+    "web/src/app/(main)/function/tasks/detail/_tabs/authority-tab.tsx": "33b92c65beb7a5994dc6729ac95d9ffa4b7fb377e6b306f47828d5f26ded75cd",
+    "web/src/components/authority-graph.tsx": "d09b753689cadaec1326bbb3238119916ffccaf2bfab474a98c8e0597a08e509",
+    "web/src/i18n/locales/tr.json": "88ec793a9715255acfa4501f9ee1c1c5488b6e76ec28d377d76e684a940d4205",
+    "web/src/i18n/locales/zh-CN.json": "c11ae229d29d59e2e7bfe47ad2e728264fcd2efffca78c3c4a491e2c05cafc2c",
+    "web/src/lib/api.ts": "94d1668e36069ffdda4637876ef05c049f8a23fc29887051b485da0d88cce707",
+    "web/src/lib/authority.ts": "2abbe80ceabc41d660a74a600a1b01bba844e5142a166ddecf92e1dc08c3d694",
+    "web/src/lib/types.ts": "f9a6bf9a0c4247df4bca894dc79c0a0396681cea21040c664306bb9fb681a669"
+  }
+}

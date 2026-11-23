@@ -41,6 +41,7 @@ import { api } from "@/lib/api";
 import type { LLMProfile, Task } from "@/lib/types";
 
 import { AssetsTab } from "./_tabs/assets-tab";
+import { AuthorityTab } from "./_tabs/authority-tab";
 import { BroadcastTab } from "./_tabs/broadcast-tab";
 import { CoverageGraphTab } from "./_tabs/coverage-graph-tab";
 import { CredentialsTab } from "./_tabs/credentials-tab";
@@ -57,6 +58,7 @@ const TABS = [
   { value: "sessions", label: t("Sessions") },
   { value: "overview", label: t("Overview") },
   { value: "graph", label: t("Exploration graph") },
+  { value: "authority", label: t("Authority") },
   { value: "broadcast", label: t("Broadcast") },
   { value: "findings", label: t("Findings") },
   { value: "retests", label: t("Retests") },
@@ -445,6 +447,9 @@ function TaskDetailInner() {
         </TabsContent>
         <TabsContent value="graph" className="mt-0">
           <GraphTab taskId={id} />
+        </TabsContent>
+        <TabsContent value="authority" className="mt-0">
+          <AuthorityTab key={id} taskId={id} />
         </TabsContent>
         <TabsContent value="broadcast" className="mt-0">
           <BroadcastTab taskId={id} />
