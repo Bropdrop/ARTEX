@@ -233,7 +233,8 @@ export function AuthorityRecordBrowser({
           <p className="text-muted-foreground text-xs">
             {t(
               "Timestamps order the recorded fields. Undated entries follow dated events. Sequence alone cannot establish causation.",
-            )}
+            )}{" "}
+            {t("Details show the row at capture time, including fields recorded after the selected event.")}
           </p>
           <div className="flex items-center gap-3">
             <Button

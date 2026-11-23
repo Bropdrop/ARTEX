@@ -2899,5 +2899,6 @@
   "Cannot align records. The task_id is unknown or differs between snapshots.": "Kayıtlar eşleştirilemiyor. task_id bilinmiyor veya anlık görüntüler arasında farklı.",
   "Cannot align records. The selection is unknown or differs between snapshots.": "Kayıtlar eşleştirilemiyor. selection bilinmiyor veya anlık görüntüler arasında farklı.",
   "Cannot align records. The coverage is unknown or differs between snapshots.": "Kayıtlar eşleştirilemiyor. coverage bilinmiyor veya anlık görüntüler arasında farklı.",
-  "Cannot align records. The synthetic is unknown or differs between snapshots.": "Kayıtlar eşleştirilemiyor. synthetic bilinmiyor veya anlık görüntüler arasında farklı."
+  "Cannot align records. The synthetic is unknown or differs between snapshots.": "Kayıtlar eşleştirilemiyor. synthetic bilinmiyor veya anlık görüntüler arasında farklı.",
+  "Details show the row at capture time, including fields recorded after the selected event.": "Ayrıntılar, seçilen olaydan sonra kaydedilen alanlar da dahil olmak üzere satırın anlık görüntü alındığındaki halini gösterir."
 }

@@ -2899,5 +2899,6 @@
   "Cannot align records. The task_id is unknown or differs between snapshots.": "无法对齐记录。task_id 未知或在两次快照之间不一致。",
   "Cannot align records. The selection is unknown or differs between snapshots.": "无法对齐记录。selection 未知或在两次快照之间不一致。",
   "Cannot align records. The coverage is unknown or differs between snapshots.": "无法对齐记录。coverage 未知或在两次快照之间不一致。",
-  "Cannot align records. The synthetic is unknown or differs between snapshots.": "无法对齐记录。synthetic 未知或在两次快照之间不一致。"
+  "Cannot align records. The synthetic is unknown or differs between snapshots.": "无法对齐记录。synthetic 未知或在两次快照之间不一致。",
+  "Details show the row at capture time, including fields recorded after the selected event.": "详情显示捕获快照时的记录，包括在所选事件之后记录的字段。"
 }
