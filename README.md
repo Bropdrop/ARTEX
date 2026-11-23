@@ -24,7 +24,7 @@ The upstream overview follows.
 
 
 Self-hosted multi-agent offensive security. A planner explores, workers run real tools,
-and every finding stays bound to the assets and HTTP traffic that prove it.
+and findings can carry asset links and captured traffic for a reviewer to examine.
 
 [![Release](https://img.shields.io/github/v/release/BaaRai/ARTEX?label=release&color=6b34db)](https://github.com/BaaRai/ARTEX/releases)
 [![License](https://img.shields.io/github/license/BaaRai/ARTEX?color=6b34db)](LICENSE)
@@ -40,8 +40,8 @@ and every finding stays bound to the assets and HTTP traffic that prove it.
 ARTEX is a self-hosted, LLM-driven penetration testing platform. It is not a chat wrapper around
 a scanner: a planner splits a goal into intents, workers execute them with real tools, and the
 results are written back into **two linked graphs**: one for what you know about the target, one
-for how the test is progressing. Every finding can carry the captured request and response that
-justify it, and every autonomous action passes through scope rules, approval gates and budgets.
+for how the test is progressing. Findings can carry captured requests and responses for review. ARTEX also provides
+scope rules, approval gates and budgets. Interception records cover only part of that activity.
 
 - **It explores, it doesn't chat.** Goal decomposition, intent dispatch, worker execution and
   write-back form a closed loop that keeps advancing until the goal is proven.
@@ -59,7 +59,7 @@ justify it, and every autonomous action passes through scope rules, approval gat
 ## Quick start
 
 ```bash
-git clone https://github.com/Bropdrop/ARTEX.git
+git clone --branch feat/wolftrax-investigation-lab-v1 https://github.com/Bropdrop/ARTEX.git
 cd ARTEX
 cp .env.example .env            # set POSTGRES_PASSWORD (and optionally an LLM key)
 docker compose up -d --build    # builds from this checkout, starts PostgreSQL
