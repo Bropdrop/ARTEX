@@ -69,6 +69,10 @@ func (d *DB) GetInterceptExecution(id int64) (*InterceptExecution, error) {
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
+	return validatedInterceptExecution(out, approval.ToolName)
+}
+
+func validatedInterceptExecution(out *InterceptExecution, toolName string) (*InterceptExecution, error) {
 	if len(out.Items) == 0 {
 		return nil, ErrInterceptSessionDeleted
 	}
@@ -76,7 +80,7 @@ func (d *DB) GetInterceptExecution(id int64) (*InterceptExecution, error) {
 		return nil, ErrInterceptExecutionUnavailable
 	}
 	call := out.Items[0]
-	if call.Kind != "tool_use" || call.Tool != approval.ToolName {
+	if call.Kind != "tool_use" || call.Tool != toolName {
 		return nil, ErrInterceptExecutionUnavailable
 	}
 	if len(out.Items) == 2 {
@@ -86,7 +90,7 @@ func (d *DB) GetInterceptExecution(id int64) (*InterceptExecution, error) {
 		}
 	}
 	out.Seq = call.ID
-	if approval.ConversationID == nil {
+	if out.ConversationID == nil {
 		switch {
 		case call.Worker == "mainagent":
 			seg := 0

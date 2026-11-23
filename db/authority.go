@@ -176,23 +176,14 @@ WHERE `+authorityVisibleTask+` GROUP BY task.id`, taskID).Scan(&out.Total)
 	if err != nil {
 		return nil, err
 	}
-	rows, err := tx.QueryContext(ctx, `SELECT ip.id, ip.task_id, ip.agent_name, ip.tool_name,
-ip.status, `+authorityDecisionSource+`, ip.decided_by, ip.created_at, ip.decided_at, `+authorityAuditProjection+`
-FROM tasks task JOIN intercept_pending ip ON `+authorityTaskRecords+`
-WHERE `+authorityVisibleTask+`
-ORDER BY ip.created_at DESC, ip.id DESC LIMIT $2 OFFSET $3`, taskID, size, int64(page-1)*int64(size))
+	rows, err := tx.QueryContext(ctx, authoritySelect+` LIMIT $2 OFFSET $3`, taskID, size, int64(page-1)*int64(size))
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 	for rows.Next() {
-		var record AuthorityRecord
-		var auditMetadata []byte
-		if err := rows.Scan(&record.ID, &record.TaskID, &record.AgentName, &record.ToolName,
-			&record.Status, &record.DecisionSource, &record.DecidedBy, &record.CreatedAt, &record.DecidedAt, &auditMetadata); err != nil {
-			return nil, err
-		}
-		if err := record.applyAuditMetadata(auditMetadata); err != nil {
+		record, err := scanAuthorityRecord(rows)
+		if err != nil {
 			return nil, err
 		}
 		out.Items = append(out.Items, record)
@@ -207,4 +198,21 @@ ORDER BY ip.created_at DESC, ip.id DESC LIMIT $2 OFFSET $3`, taskID, size, int64
 		return nil, err
 	}
 	return out, nil
+}
+
+const authoritySelect = `SELECT ip.id, ip.task_id, ip.agent_name, ip.tool_name,
+ip.status, ` + authorityDecisionSource + `, ip.decided_by, ip.created_at, ip.decided_at, ` + authorityAuditProjection + `
+FROM tasks task JOIN intercept_pending ip ON ` + authorityTaskRecords + `
+WHERE ` + authorityVisibleTask + `
+ORDER BY ip.created_at DESC, ip.id DESC`
+
+func scanAuthorityRecord(rows *sql.Rows) (AuthorityRecord, error) {
+	var record AuthorityRecord
+	var auditMetadata []byte
+	err := rows.Scan(&record.ID, &record.TaskID, &record.AgentName, &record.ToolName,
+		&record.Status, &record.DecisionSource, &record.DecidedBy, &record.CreatedAt, &record.DecidedAt, &auditMetadata)
+	if err == nil {
+		err = record.applyAuditMetadata(auditMetadata)
+	}
+	return record, err
 }
