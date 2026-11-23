@@ -169,9 +169,10 @@ export function AuthorityRecordBrowser({
                 onChange={(e) => setFilter("until", e.target.value)}
               />
             </label>
-            <label className="space-y-1 text-xs">
-              {t("Evidence gap")}
+            <div className="space-y-1 text-xs">
+              <label htmlFor={`${prefix}gap`}>{t("Evidence gap")}</label>
               <select
+                id={`${prefix}gap`}
                 className="block h-8 w-full rounded border bg-background px-2"
                 value={filters.gap}
                 onChange={(e) => setFilter("gap", e.target.value)}
@@ -183,11 +184,12 @@ export function AuthorityRecordBrowser({
                   </option>
                 ))}
               </select>
-            </label>
+            </div>
             {comparison?.compatible && (
-              <label className="space-y-1 text-xs">
-                {t("Snapshot change")}
+              <div className="space-y-1 text-xs">
+                <label htmlFor={`${prefix}change`}>{t("Snapshot change")}</label>
                 <select
+                  id={`${prefix}change`}
                   className="block h-8 w-full rounded border bg-background px-2"
                   value={changeFilter}
                   onChange={(e) => {
@@ -203,7 +205,7 @@ export function AuthorityRecordBrowser({
                     </option>
                   ))}
                 </select>
-              </label>
+              </div>
             )}
           </div>
         </details>
