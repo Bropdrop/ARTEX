@@ -221,12 +221,11 @@ function TaskLLMControl({ task, profiles, onUpdated }: { task: Task; profiles: L
   );
 }
 
-function TaskDetailInner({ id, initialTab }: { id: string; initialTab: string }) {
+function TaskDetailInner({ id, tab, setTab }: { id: string; tab: string; setTab: (next: string) => void }) {
   const router = useRouter();
   const [task, setTask] = React.useState<Task | null>(null);
   const [paused, setPaused] = React.useState(false);
   const [loaded, setLoaded] = React.useState(false);
-  const [tab, setTab] = React.useState(initialTab);
   const [offline, setOffline] = React.useContext(InvestigationMode);
   const [focus, setFocus] = React.useState<ResolvedAuthorityFocus>();
   React.useEffect(() => () => setOffline(false), [setOffline]);
@@ -504,8 +503,12 @@ function TaskDetailInner({ id, initialTab }: { id: string; initialTab: string })
 function TaskFromQuery() {
   const params = useSearchParams();
   const id = params.get("id") ?? "";
-  const initialTab = params.get("tab") === "authority" && !params.has("approval") ? "authority" : "sessions";
-  return <TaskDetailInner key={id} id={id} initialTab={initialTab} />;
+  // Keep the selected view across task switches, while all fetched records,
+  // pending loads and source locators are owned by the keyed task component.
+  const [tab, setTab] = React.useState(
+    params.get("tab") === "authority" && !params.has("approval") ? "authority" : "sessions",
+  );
+  return <TaskDetailInner key={id} id={id} tab={tab} setTab={setTab} />;
 }
 
 // useSearchParams must sit under a Suspense boundary for static export.
