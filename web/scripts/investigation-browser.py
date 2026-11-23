@@ -71,6 +71,10 @@ class Fixture:
             return await route.continue_()
         query = parse_qs(url.query)
         self.requests.append((request.method, path))
+        frame_path = urlparse(request.frame.url).path.rstrip("/")
+        if frame_path == "/function/investigation" and path == "/api/intercept/pending":
+            self.violations.append(("live approval read on standalone casefile page", request.method, path))
+            return await route.abort()
         if self.source_request and (request.method, path) == ("POST", self.source_request[0]):
             assert request.headers.get("authorization") == f"Bearer {TOKEN}"
             assert request.post_data_json == self.source_request[1]
