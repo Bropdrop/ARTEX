@@ -2,14 +2,22 @@
 
 import * as React from "react";
 import { Button } from "@/components/ui/button";
-import { api } from "@/lib/api";
+import { api, type ResolvedAuthorityFocus } from "@/lib/api";
 import type { Activity, InterceptExecution } from "@/lib/types";
 import { t } from "@/i18n";
 
 // Resolve one exact persisted call, independently of transcript pagination.
-export function useApprovalFocus({ taskId, conversationId }: { taskId?: string; conversationId?: number }) {
+export function useApprovalFocus({
+  taskId,
+  conversationId,
+  initialFocus,
+}: {
+  taskId?: string;
+  conversationId?: number;
+  initialFocus?: ResolvedAuthorityFocus;
+}) {
   const [state, setState] = React.useState<{
-    id: number;
+    id: number | string;
     source?: InterceptExecution;
     error?: string;
     loading: boolean;
@@ -17,6 +25,10 @@ export function useApprovalFocus({ taskId, conversationId }: { taskId?: string; 
   const [revision, setRevision] = React.useState(0);
   // biome-ignore lint/correctness/useExhaustiveDependencies: revision is the explicit retry trigger.
   React.useEffect(() => {
+    if (initialFocus && taskId && initialFocus.source.task_id === taskId) {
+      setState({ ...initialFocus, loading: false });
+      return;
+    }
     const q = new URLSearchParams(window.location.search);
     const id = Number(q.get("approval"));
     const matches = conversationId ? q.get("c") === String(conversationId) : q.get("id") === taskId;
@@ -45,7 +57,7 @@ export function useApprovalFocus({ taskId, conversationId }: { taskId?: string; 
     return () => {
       cancelled = true;
     };
-  }, [taskId, conversationId, revision]);
+  }, [taskId, conversationId, revision, initialFocus]);
   const close = React.useCallback(() => {
     const url = new URL(window.location.href);
     url.searchParams.delete("approval");

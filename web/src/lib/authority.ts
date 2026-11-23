@@ -215,7 +215,20 @@ export interface AuthorityGraphEdge {
   kind: "recorded" | "unresolved";
 }
 
-export function authorityGraph(record: AuthorityRecord): { nodes: AuthorityGraphNode[]; edges: AuthorityGraphEdge[] } {
+export type GraphRecord = Pick<
+  AuthorityRecord,
+  | "agent_name"
+  | "tool_name"
+  | "status"
+  | "audit_present"
+  | "correlation"
+  | "execution_status"
+  | "tool_use_id"
+  | "decided_by"
+  | "decision_source"
+> & { id: number | string };
+
+export function authorityGraph(record: GraphRecord): { nodes: AuthorityGraphNode[]; edges: AuthorityGraphEdge[] } {
   const decision = decisionState(record.status);
   const outcome = executionState(record);
   const correlated = canLocateAuthoritySource(record);
