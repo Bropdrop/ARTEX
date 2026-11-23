@@ -1,6 +1,9 @@
 # Awootex — Codex handoff
 
-**Awootex** is the name of this Bropdrop development fork in the WolfTrap project.
+> Historical handoff for PR #2. The fork now uses the **Wolftrax** name.
+> New development is documented in the [Investigation Lab guide](wolftrax-investigation-lab-v1.md).
+
+**Awootex** was the name of this Bropdrop development fork at the Authority Graph handoff.
 The verified GitHub repository address is currently
 [Bropdrop/ARTEX](https://github.com/Bropdrop/ARTEX).
 

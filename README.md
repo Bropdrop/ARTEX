@@ -1,14 +1,18 @@
-> **Awootex — Bropdrop / WolfTrap development fork.** Based on the public
-> [BaaRai/ARTEX](https://github.com/BaaRai/ARTEX) continuation of Autumn-27's ARTEX.
-> Development repository: [Bropdrop/ARTEX](https://github.com/Bropdrop/ARTEX).
-> Start here for the [Codex review handoff](docs/awootex-codex-handoff.md).
-> Additions include an [offline evidence referee](docs/wolftrap-evidence-referee.md)
-> for existing ARTEX finding exports and a native
-> [Authority view](docs/wolftrap-authority-graph-v1.md) of recorded interception decisions.
-> The view distinguishes approval, recorded tool outcomes and missing grant/effect
-> evidence. Enforced owner grants, an isolated execution broker and controlled
-> reproduction remain planned work.
-> Upstream attribution and the AGPL-3.0 licence are retained.
+# Wolftrax
+
+Wolftrax is the Bropdrop fork of ARTEX in the WolfTrap project. Investigation Lab
+adds a read-only workbench to the task’s Authority tab. Freeze the recorded
+interception decisions, inspect the timeline, compare later captures, and export
+an offline reviewer report.
+
+[Investigation Lab guide](docs/wolftrax-investigation-lab-v1.md) ·
+[Authority projection](docs/wolftrap-authority-graph-v1.md) ·
+[Findings archive referee](docs/wolftrap-evidence-referee.md) ·
+[Bropdrop/ARTEX](https://github.com/Bropdrop/ARTEX)
+
+Wolftrax builds on the public [BaaRai/ARTEX](https://github.com/BaaRai/ARTEX)
+continuation of Autumn-27’s ARTEX under the [AGPL-3.0 licence](LICENSE).
+The upstream overview follows.
 
 <div align="center">
 
@@ -55,7 +59,7 @@ justify it, and every autonomous action passes through scope rules, approval gat
 ## Quick start
 
 ```bash
-git clone https://github.com/BaaRai/ARTEX.git
+git clone https://github.com/Bropdrop/ARTEX.git
 cd ARTEX
 cp .env.example .env            # set POSTGRES_PASSWORD (and optionally an LLM key)
 docker compose up -d --build    # builds from this checkout, starts PostgreSQL
