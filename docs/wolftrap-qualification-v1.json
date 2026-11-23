@@ -1,0 +1,50 @@
+{
+  "schema": "wolftrap-offline-reader-qualification-v1",
+  "recorded_at_utc": "2026-11-23T17:37:12.507512+00:00",
+  "upstream_repository": "https://github.com/BaaRai/ARTEX",
+  "upstream_commit": "d235be850e9b34247ddb566686c47e6d4e4f0daf",
+  "upstream_tree": "f57922d97e56c2614e04e0406df13838e131a92e",
+  "fork_repository": "https://github.com/GovernableIntelligence/ARTEX",
+  "qualification_scope": "additive_offline_python_reader_only",
+  "python": "3.12.14",
+  "source_files_sha256": {
+    "README.md": "eb3ee5fb8b44ab319b16bfed11c2094b63c9f951f991496f242c9aed0bb3f4de",
+    "docs/wolftrap-evidence-referee.md": "9ee7f20a810d807f2b8b830f03b42078f01a6974ce004e3d493617ddb9f90588",
+    "scripts/wolftrap_evidence.py": "90a43ee3d458df762c1721a210d202d1078068c6c73c61cc17be3520b90d3d60",
+    "scripts/test_wolftrap_evidence.py": "156e3e21e75ffcaeb6ba791d4f0423f365910147cf0f63beaef990f999838e88"
+  },
+  "test_execution": {
+    "runner": "unittest.TextTestRunner",
+    "discovery_start_dir": "scripts",
+    "discovery_pattern": "test_wolftrap_evidence.py",
+    "reproduce": "python3 -m unittest discover -s scripts -p 'test_wolftrap_evidence.py' -v",
+    "test_methods_run": 42,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "fixture_origin": "synthetic fixtures derived from the pinned ARTEX exporter and database structs"
+  },
+  "independent_review": {
+    "scope": "offline reader parser, resource limits, hash fidelity and trust claims",
+    "unresolved_findings_in_reviewed_scope": 0,
+    "reproduced_and_corrected": [
+      "EOCD undercount allowed central-directory allocation before an actual-count check; now bounded before ZipFile construction.",
+      "ZipFile hid an excess decompressed suffix; complete raw streams now require exact length, end-of-stream, CRC and no unused/concatenated compressed data."
+    ],
+    "regression_result": "Previously accepted malformed fixtures reject; ordinary stored, deflated and streamed-descriptor fixtures pass."
+  },
+  "trust_boundaries": {
+    "origin_status": "UNAUTHENTICATED",
+    "claim_status": "CLAIM_NOT_ASSESSED",
+    "external_sha256_pin": "consistency anchor only; not a signature, identity proof or claim of truthful capture",
+    "completeness": "included evidence bindings only, not server database completeness or support for every report",
+    "record_signature": "none; this is a development qualification record, not an independent signed certification"
+  },
+  "not_executed": [
+    "Live Go/ARTEX-generated export compatibility",
+    "Complete ARTEX Go/PostgreSQL/frontend regression suite",
+    "Production deployment or runtime containment qualification"
+  ],
+  "test_target_traffic": "none",
+  "model_api_calls": 0
+}

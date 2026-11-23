@@ -1,3 +1,11 @@
+> **GovernableIntelligence / WolfTrap development fork.** Based on the public
+> [BaaRai/ARTEX](https://github.com/BaaRai/ARTEX) continuation of Autumn-27's ARTEX.
+> Our first addition is an [offline evidence referee](docs/wolftrap-evidence-referee.md)
+> for existing ARTEX finding exports. It checks evidence integrity separately from
+> vulnerability claims. The authority graph, isolated execution broker and controlled
+> reproduction engine are planned work, not capabilities supplied by this increment.
+> Upstream attribution and the AGPL-3.0 licence are retained.
+
 <div align="center">
 
 <img src="web/public/logo.svg" width="84" alt="ARTEX logo" />
