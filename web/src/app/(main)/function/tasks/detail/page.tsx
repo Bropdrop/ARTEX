@@ -8,6 +8,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { ArchiveIcon, ArrowLeftIcon, BrainIcon, CheckIcon, CircleAlertIcon, PauseIcon, PlayIcon } from "lucide-react";
 import { toast } from "sonner";
 
+import { InvestigationMode } from "@/components/investigation-mode";
 import { StatusBadge } from "@/components/status-badge";
 import { TaskLLMProfileChain } from "@/components/task-llm-profile-chain";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -37,7 +38,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { t } from "@/i18n";
-import { api } from "@/lib/api";
+import { api, type ResolvedAuthorityFocus } from "@/lib/api";
 import type { LLMProfile, Task } from "@/lib/types";
 
 import { AssetsTab } from "./_tabs/assets-tab";
@@ -220,14 +221,15 @@ function TaskLLMControl({ task, profiles, onUpdated }: { task: Task; profiles: L
   );
 }
 
-function TaskDetailInner() {
+function TaskDetailInner({ id, initialTab }: { id: string; initialTab: string }) {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const id = searchParams.get("id") ?? "";
   const [task, setTask] = React.useState<Task | null>(null);
   const [paused, setPaused] = React.useState(false);
   const [loaded, setLoaded] = React.useState(false);
-  const [tab, setTab] = React.useState("sessions");
+  const [tab, setTab] = React.useState(initialTab);
+  const [offline, setOffline] = React.useContext(InvestigationMode);
+  const [focus, setFocus] = React.useState<ResolvedAuthorityFocus>();
+  React.useEffect(() => () => setOffline(false), [setOffline]);
   const [interceptPendingCount, setInterceptPendingCount] = React.useState(0);
   const [profiles, setProfiles] = React.useState<LLMProfile[]>([]);
   const [archiving, setArchiving] = React.useState(false);
@@ -240,6 +242,7 @@ function TaskDetailInner() {
   }, []);
 
   React.useEffect(() => {
+    if (offline) return;
     let alive = true;
     const load = () =>
       api
@@ -256,18 +259,19 @@ function TaskDetailInner() {
       alive = false;
       stopPolling();
     };
-  }, [id]);
+  }, [id, offline]);
 
-  const taskLoadInFlight = React.useRef<string | null>(null);
+  const taskLoadInFlight = React.useRef<symbol | null>(null);
   const load = React.useCallback(() => {
-    if (taskLoadInFlight.current === id) return;
-    taskLoadInFlight.current = id;
-    Promise.all([api.task(id), api.stats(id).catch(() => null)])
+    if (offline || taskLoadInFlight.current) return;
+    const request = Symbol();
+    taskLoadInFlight.current = request;
+    return Promise.all([api.task(id), api.stats(id).catch(() => null)])
       .then(([task, s]) => {
-        if (taskLoadInFlight.current !== id) return;
+        if (taskLoadInFlight.current !== request || task.id !== id) return;
         const base = { ...task };
         const at = s?.active_task;
-        if (at) {
+        if (at?.id === id) {
           base.in_flight = at.in_flight;
           base.goals_total = at.goals_total;
           base.goals_met = at.goals_met;
@@ -275,23 +279,40 @@ function TaskDetailInner() {
           base.paused = at.paused;
         }
         setTask(base);
-        setPaused(at?.paused ?? base.paused ?? false);
+        setPaused(base.paused ?? false);
       })
       .catch(() => {
         // Keep the last rendered task state during a transient poll failure.
       })
       .finally(() => {
-        if (taskLoadInFlight.current === id) {
+        if (taskLoadInFlight.current === request) {
           taskLoadInFlight.current = null;
           setLoaded(true);
         }
       });
-  }, [id]);
+  }, [id, offline]);
   React.useEffect(() => {
-    load();
+    if (offline) return;
+    void load();
     const stopPolling = setVisibleInterval(load, 5000);
-    return stopPolling;
-  }, [load]);
+    return () => {
+      stopPolling();
+      taskLoadInFlight.current = null;
+    };
+  }, [load, offline]);
+
+  function changeTab(next: string) {
+    setOffline(false);
+    setFocus(undefined);
+    setTab(next);
+  }
+
+  function openRecordedSource(value: ResolvedAuthorityFocus) {
+    if (value.source.task_id !== id || value.source.conversation_id != null) return;
+    setFocus(value);
+    setOffline(false);
+    setTab("sessions");
+  }
 
   async function togglePause() {
     if (task && ["done", "failed", "timeout"].includes(task.status)) return;
@@ -369,7 +390,7 @@ function TaskDetailInner() {
   );
 
   return (
-    <Tabs value={tab} onValueChange={setTab} className="flex flex-1 flex-col gap-0">
+    <Tabs value={tab} onValueChange={changeTab} className="flex flex-1 flex-col gap-0">
       {/* Top fixed area */}
       <header className="sticky top-0 z-10 flex flex-col gap-2 border-b bg-background/95 px-4 py-2.5 backdrop-blur lg:px-6">
         <div className="flex items-center gap-2">
@@ -440,7 +461,7 @@ function TaskDetailInner() {
       {/* Tab content */}
       <div className="flex-1 p-4 lg:p-6">
         <TabsContent value="sessions" className="mt-0">
-          <SessionsTab taskId={id} taskPaused={task?.status === "paused"} />
+          <SessionsTab taskId={id} initialFocus={focus} taskPaused={task?.status === "paused"} />
         </TabsContent>
         <TabsContent value="overview" className="mt-0">
           <OverviewTab taskId={id} />
@@ -449,7 +470,7 @@ function TaskDetailInner() {
           <GraphTab taskId={id} />
         </TabsContent>
         <TabsContent value="authority" className="mt-0">
-          <AuthorityTab key={id} taskId={id} />
+          <AuthorityTab taskId={id} onOfflineChange={setOffline} onSourceResolved={openRecordedSource} />
         </TabsContent>
         <TabsContent value="broadcast" className="mt-0">
           <BroadcastTab taskId={id} />
@@ -480,11 +501,18 @@ function TaskDetailInner() {
   );
 }
 
+function TaskFromQuery() {
+  const params = useSearchParams();
+  const id = params.get("id") ?? "";
+  const initialTab = params.get("tab") === "authority" && !params.has("approval") ? "authority" : "sessions";
+  return <TaskDetailInner key={id} id={id} initialTab={initialTab} />;
+}
+
 // useSearchParams must sit under a Suspense boundary for static export.
 export default function TaskDetailPage() {
   return (
     <React.Suspense fallback={null}>
-      <TaskDetailInner />
+      <TaskFromQuery />
     </React.Suspense>
   );
 }

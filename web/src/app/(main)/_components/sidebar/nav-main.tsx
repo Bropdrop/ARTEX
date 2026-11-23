@@ -37,6 +37,7 @@ import type {
   NavMainLinkItem,
   NavMainParentItem,
 } from "@/navigation/sidebar/sidebar-items";
+import { InvestigationMode } from "@/components/investigation-mode";
 import { setVisibleInterval } from "@/lib/polling";
 
 interface NavMainProps {
@@ -166,7 +167,9 @@ function NavItem({ item, isItemActive, isSubItemActive, isSubmenuOpen }: NavItem
 // count badge when there are unresolved approval requests.
 function InterceptPendingBadge() {
   const [count, setCount] = React.useState(0);
+  const [offline] = React.useContext(InvestigationMode);
   React.useEffect(() => {
+    if (offline) return;
     let live = true;
     async function poll() {
       try {
@@ -177,8 +180,8 @@ function InterceptPendingBadge() {
     poll();
     const stopPolling = setVisibleInterval(poll, 5000);
     return () => { live = false; stopPolling(); };
-  }, []);
-  if (count === 0) return null;
+  }, [offline]);
+  if (offline || count === 0) return null;
   return (
     <SidebarMenuBadge className="flex h-4.5 min-w-[18px] items-center justify-center rounded-full bg-amber-500 px-1 text-[10px] font-semibold leading-none text-white shadow-sm ring-1 ring-amber-400/40">
       {count > 99 ? "99+" : count}

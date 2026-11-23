@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import * as React from "react";
 
 import { AppSidebar } from "@/app/(main)/_components/sidebar/app-sidebar";
+import { InvestigationMode } from "@/components/investigation-mode";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { auth } from "@/lib/auth";
 import { getClientCookie } from "@/lib/cookie.client";
@@ -32,6 +33,7 @@ export default function Layout({ children }: Readonly<{ children: ReactNode }>) 
   // Client-side auth gate — replaces the Next proxy/middleware that static export
   // disables. No token → bounce to /login; render nothing until confirmed so no
   // protected UI (or its API calls) flashes for a logged-out visitor.
+  const investigation = React.useState(false);
   const [authed, setAuthed] = React.useState(false);
   React.useEffect(() => {
     if (auth.getToken()) {
@@ -60,27 +62,29 @@ export default function Layout({ children }: Readonly<{ children: ReactNode }>) 
   if (!authed) return null;
 
   return (
-    <SidebarProvider
-      defaultOpen={defaultOpen}
-      style={
-        {
-          "--sidebar-width": "calc(var(--spacing) * 68)",
-        } as React.CSSProperties
-      }
-    >
-      <AppSidebar variant={variant} collapsible={collapsible} />
-      <SidebarInset
-        className={cn(
-          "[html[data-content-layout=centered]_&>*]:mx-auto",
-          "[html[data-content-layout=centered]_&>*]:w-full",
-          "[html[data-content-layout=centered]_&>*]:max-w-screen-2xl",
-          "peer-data-[variant=inset]:border",
-          "[--dashboard-header-height:--spacing(12)]",
-          "min-w-0 overflow-x-hidden",
-        )}
+    <InvestigationMode.Provider value={investigation}>
+      <SidebarProvider
+        defaultOpen={defaultOpen}
+        style={
+          {
+            "--sidebar-width": "calc(var(--spacing) * 68)",
+          } as React.CSSProperties
+        }
       >
-        <MainContent>{children}</MainContent>
-      </SidebarInset>
-    </SidebarProvider>
+        <AppSidebar variant={variant} collapsible={collapsible} />
+        <SidebarInset
+          className={cn(
+            "[html[data-content-layout=centered]_&>*]:mx-auto",
+            "[html[data-content-layout=centered]_&>*]:w-full",
+            "[html[data-content-layout=centered]_&>*]:max-w-screen-2xl",
+            "peer-data-[variant=inset]:border",
+            "[--dashboard-header-height:--spacing(12)]",
+            "min-w-0 overflow-x-hidden",
+          )}
+        >
+          <MainContent>{children}</MainContent>
+        </SidebarInset>
+      </SidebarProvider>
+    </InvestigationMode.Provider>
   );
 }
